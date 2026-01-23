@@ -33,9 +33,9 @@ def main():
         AnimatedNPC(
             start_pos=(3, 0, 0),
             end_pos=(15, 0, 0),
-            speed=0.5,
-            model_path='assets/models/wolf.glb',
-            anim_name='Armature|walking_man|baselayer'
+            speed=3,
+            model_path='assets/models/Droid.glb',
+            anim_name='Walking'
         )
     ]
 

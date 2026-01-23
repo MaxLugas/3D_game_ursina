@@ -4,7 +4,7 @@ from math import atan2, degrees
 from src.utils.object_setup import setup_collidable_object
 
 class AnimatedNPC:
-    def __init__(self, start_pos, end_pos, speed=1, model_path='assets/models/wolf.glb',
+    def __init__(self, start_pos, end_pos, speed=1, model_path='assets/models/Droid.glb',
                  anim_name=None, fix_orientation=True, scale=2.0, shrink_factor=0.8):
         self.start_pos = Vec3(start_pos)
         self.end_pos = Vec3(end_pos)
@@ -65,18 +65,24 @@ class AnimatedNPC:
     def update(self):
         target = self.end_pos if self.move_to_end else self.start_pos
         current = Vec3(self.actor.get_x(), self.actor.get_y(), self.actor.get_z())
-        new_pos = lerp(current, target, self.speed * time.dt)
-        self.actor.set_pos(new_pos)
-        self.collider_entity.position = new_pos
+        direction = target - current
 
-        to_target = Vec3(target - current)
-        if to_target.x != 0 or to_target.z != 0:
-            angle = atan2(to_target.x, to_target.z)
-            self.actor.set_h(degrees(angle))
-            self.collider_entity.rotation_y = degrees(angle)
-
-        if distance(current, target) < 0.2:
+        # Если достигли цели — переключаем направление
+        if direction.length() <= self.speed * time.dt:
             self.move_to_end = not self.move_to_end
+            # Устанавливаем точно в точку, чтобы избежать "дрожания"
+            new_pos = target
+        else:
+            # Двигаемся с постоянной скоростью
+            direction = direction.normalized()
+            new_pos = current + direction * self.speed * time.dt
+
+        self.actor.set_pos(new_pos)
+
+        # Поворот по направлению движения
+        if direction.x != 0 or direction.z != 0:
+            angle = atan2(direction.x, direction.z)
+            self.actor.set_h(degrees(angle))
 
     def get_position(self):
         return Vec3(self.actor.get_x(), self.actor.get_y(), self.actor.get_z())
