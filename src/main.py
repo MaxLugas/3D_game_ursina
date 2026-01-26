@@ -8,15 +8,16 @@ from src.systems.game_logic import GameLogic
 from src.entities.player import create_player
 from src.entities.npc import AnimatedNPC
 from ursina import *
+from src.systems.minimap import Minimap
 
 game_logic=None
 player=None
+minimap=None
 
 def main():
-    global game_logic, player
+    global game_logic, player, minimap
     app = init_engine()
 
-    # Создаём игрока
     player = create_player(
         speed=8,
         second_jump_height=3,
@@ -25,10 +26,8 @@ def main():
         position=(0, 1, 0)
     )
 
-    # Загружаем карту
-    statue_triggers_list = load_map('assets/map.txt')
+    world_entities, statue_triggers_list = load_map('assets/map.txt')
 
-    # Создаём NPC
     npcs = [
         AnimatedNPC(
             start_pos=(3, 0, 0),
@@ -39,16 +38,28 @@ def main():
         )
     ]
 
+    game_logic = GameLogic(
+        player=player,
+        npcs=npcs,
+        statue_triggers=statue_triggers_list,
+        world_entities=world_entities
+    )
 
-    # Инициализируем логику игры
-    game_logic = GameLogic(player=player, npcs=npcs, statue_triggers=statue_triggers_list)
+    # === Мини-карта ===
+    minimap = Minimap(
+        player=player,
+        world_entities=world_entities,
+        npcs=npcs,
+        map_half_size=35  # = ground.scale.x / 2
+    )
 
-    # Запуск
     app.run()
 
 def update():
     if game_logic is not None:
         game_logic.update()
+    if minimap is not None:
+        minimap.update()
 
 def input(key):
     global player, game_logic
@@ -60,12 +71,8 @@ def input(key):
             ignore=(player,)
         )
         if hit_info.hit and hit_info.entity in game_logic.statue_triggers:
-            hit_entity = hit_info.entity
-            destroy(hit_entity.visual)
-            destroy(hit_entity)
-            game_logic.statue_triggers.remove(hit_entity)
+            game_logic.remove_statue(hit_info.entity)
 
-            from ursina import Text, color, curve, invoke
             msg = Text(
                 text='Статуя подобрана!',
                 origin=(0, 0),
