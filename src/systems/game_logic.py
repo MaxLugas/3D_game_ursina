@@ -1,13 +1,24 @@
 from ursina import *
 
 class GameLogic:
-    def __init__(self, player, npcs, statue_triggers):
+    def __init__(self, player, npcs, statue_triggers, world_entities):
         self.player = player
         self.npcs = npcs
         self.statue_triggers = statue_triggers
+        self.world_entities = world_entities  # ← новое поле
         self.base_speed = player.speed
-        self.map_half_size = int(70 / 2)  # совпадает с ground.scale.x
+        self.map_half_size = int(70 / 2)
 
+    def remove_statue(self, trigger):
+        if trigger in self.statue_triggers:
+            visual = trigger.visual
+            # Удаляем из мира
+            destroy(visual)
+            destroy(trigger)
+            # Удаляем из списков
+            self.statue_triggers.remove(trigger)
+            if visual in self.world_entities:
+                self.world_entities.remove(visual)
 
 
     def update(self):

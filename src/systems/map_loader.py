@@ -4,16 +4,15 @@ from src.utils.object_setup import setup_collidable_object
 statue_triggers = []
 
 def load_map(filename='assets/map.txt'):
-    global statue_triggers
+    world_entities = []
+    statue_triggers = []
+
     try:
         with open(filename, 'r') as f:
             lines = [line.rstrip('\n') for line in f.readlines() if line.strip()]
     except FileNotFoundError:
         print(f"⚠️ Файл {filename} не найден.")
-        return
-
-    if not lines:
-        return
+        return world_entities, statue_triggers
 
     map_height = len(lines)
     map_width = max(len(line) for line in lines)
@@ -35,6 +34,7 @@ def load_map(filename='assets/map.txt'):
                     enabled=False
                 )
                 invoke(setup_collidable_object, rock, shrink_factor=0.5, delay=0)
+                world_entities.append(rock)
 
             elif char == 'T':
                 tree = Entity(
@@ -45,6 +45,7 @@ def load_map(filename='assets/map.txt'):
                     enabled=False
                 )
                 invoke(setup_collidable_object, tree, shrink_factor=0.5, delay=0)
+                world_entities.append(tree)
 
             elif char == 'S':
                 statue = Entity(
@@ -55,7 +56,6 @@ def load_map(filename='assets/map.txt'):
                     enabled=False
                 )
                 statue.collider = None
-
                 trigger = Entity(
                     position=statue.position,
                     scale=Vec3(1, 1, 1),
@@ -65,5 +65,6 @@ def load_map(filename='assets/map.txt'):
                 trigger.visual = statue
                 statue_triggers.append(trigger)
                 invoke(setup_collidable_object, statue, shrink_factor=1, delay=0)
+                world_entities.append(statue)  # ← добавляем саму статую
 
-    return statue_triggers
+    return world_entities, statue_triggers

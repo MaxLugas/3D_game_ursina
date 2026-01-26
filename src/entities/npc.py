@@ -67,13 +67,10 @@ class AnimatedNPC:
         current = Vec3(self.actor.get_x(), self.actor.get_y(), self.actor.get_z())
         direction = target - current
 
-        # Если достигли цели — переключаем направление
         if direction.length() <= self.speed * time.dt:
             self.move_to_end = not self.move_to_end
-            # Устанавливаем точно в точку, чтобы избежать "дрожания"
             new_pos = target
         else:
-            # Двигаемся с постоянной скоростью
             direction = direction.normalized()
             new_pos = current + direction * self.speed * time.dt
 
@@ -83,6 +80,9 @@ class AnimatedNPC:
         if direction.x != 0 or direction.z != 0:
             angle = atan2(direction.x, direction.z)
             self.actor.set_h(degrees(angle))
+
+        # Синхронизация коллайдера с актёром
+        self.collider_entity.position = Vec3(self.actor.get_x(), self.actor.get_y(), self.actor.get_z())
 
     def get_position(self):
         return Vec3(self.actor.get_x(), self.actor.get_y(), self.actor.get_z())
