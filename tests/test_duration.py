@@ -9,7 +9,7 @@ getModelPath().append_directory(str(model_dir))
 
 app = Ursina(title="Тест анимации: кадры и длительность", borderless=False, vsync=False)
 
-actor = Actor('weapon_Glok.glb')
+actor = Actor('weapon_Glock.glb')
 actor.reparent_to(scene)
 actor.set_scale(1.6)
 
