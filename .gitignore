@@ -7,3 +7,8 @@ __pycache__/
 .idea/
 all_code.txt
 collect_pycode.py
+/src/assets/future_models/
+/src/assets/future_textures/
+tests/test_frame.py
+tests/test_duration.py
+tests/test_models.py

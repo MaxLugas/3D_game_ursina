@@ -54,8 +54,10 @@ class FPSWeapon:
                 print(f"⚠️ Анимация '{name}' ('{anim}') не найдена!")
         self.available = available
 
-        # Состояние анимации
+        # Состояние оружия
         self.is_animating = False
+        self.shots_fired = 0          # ← добавлено
+        self.magazine_size = 5        # ← максимум 5 выстрелов
 
         # Сразу достаём
         if 'fire' in self.anim_names and self.anim_names['fire'] in self.available:
@@ -63,7 +65,11 @@ class FPSWeapon:
 
     def play_animation(self, action_key):
         if self.is_animating:
-            return  # Блокируем, если уже играет анимация
+            return
+
+        # ←←← ДОБАВЛЕНО: блокируем стрельбу, если магазин пуст
+        if action_key == 'fire' and self.shots_fired >= self.magazine_size:
+            return
 
         anim_name = self.anim_names.get(action_key)
         if not (anim_name and anim_name in self.available):
@@ -77,23 +83,33 @@ class FPSWeapon:
             self.actor.play(anim_name, fromFrame=from_frame, toFrame=to_frame)
 
             num_frames = to_frame - from_frame
-            fps = 24
+            fps = 60
             duration = num_frames / fps
 
-            # Через `duration` секунд сбросим флаг и вернёмся к позе
             invoke(self._on_fire_animation_end, anim_name, delay=duration)
+
+            self.shots_fired += 1
+            if self.shots_fired >= self.magazine_size:
+                invoke(self._start_reload_after_empty, delay=duration + 0.1)
+
         else:
             self.actor.play(anim_name)
             frame_count = self.actor.get_num_frames(anim_name)
-            duration = frame_count / 24.0
-            invoke(self._on_animation_end, delay=duration)
+            duration = frame_count / 60
+            invoke(self._on_animation_end, anim_name, delay=duration)
+
+    def _start_reload_after_empty(self):
+        self.play_animation('reload')
 
     def _on_fire_animation_end(self, anim_name):
         self.actor.pose(anim_name, 105)
         self.is_animating = False
 
-    def _on_animation_end(self):
+    def _on_animation_end(self, anim_name):
         self.is_animating = False
+        # Если завершилась перезарядка — сбросить счётчик
+        if anim_name == self.anim_names.get('reload'):
+            self.shots_fired = 0
 
     def update(self):
         if not self.is_animating:
