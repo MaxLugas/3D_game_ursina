@@ -1,4 +1,4 @@
-# src/core/config.py
+from ursina import Vec3, color
 from pathlib import Path
 
 # ================ Пути ================
@@ -56,3 +56,8 @@ WINDOW_TITLE = "Game"
 WINDOW_BORDERLESS = False
 WINDOW_VSYNC = False
 SHOW_COLLIDERS = True
+
+# ================ Окружение (небо, свет) ================
+SKY_TEXTURE = 'sky_sunset'          # имя текстуры из assets/textures/
+DIRECTIONAL_LIGHT_DIRECTION = Vec3(1, -1, -1)
+AMBIENT_LIGHT_COLOR = color.rgb(0.3, 0.3, 0.35)

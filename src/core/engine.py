@@ -1,6 +1,7 @@
 from ursina import *
 from pathlib import Path
-from src.core.config import GROUND_SCALE, WINDOW_TITLE, WINDOW_BORDERLESS, WINDOW_VSYNC, SHOW_COLLIDERS, ASSETS_DIR
+from src.core.config import GROUND_SCALE, WINDOW_TITLE, WINDOW_BORDERLESS, WINDOW_VSYNC, SHOW_COLLIDERS, ASSETS_DIR, \
+    DIRECTIONAL_LIGHT_DIRECTION, SKY_TEXTURE, AMBIENT_LIGHT_COLOR
 
 
 def init_engine():
@@ -12,10 +13,10 @@ def init_engine():
     )
     window.show_colliders = SHOW_COLLIDERS
 
-    Sky(texture='sky_sunset')
+    Sky(texture=SKY_TEXTURE)
     sun = DirectionalLight(shadows=True)
-    sun.look_at(Vec3(1, -1, -1))
-    AmbientLight(color=color.rgb(0.6, 0.6, 0.6))
+    sun.look_at(DIRECTIONAL_LIGHT_DIRECTION)
+    AmbientLight(color=AMBIENT_LIGHT_COLOR)
 
     ground = Entity(
         model='plane',

@@ -1,5 +1,5 @@
 from ursina import *
-from src.core.config import GROUND_SCALE
+from src.core.config import MAP_HALF_SIZE
 
 
 class GameLogic:
@@ -9,7 +9,7 @@ class GameLogic:
         self.statue_triggers = statue_triggers
         self.world_entities = world_entities
         self.base_speed = player.speed
-        self.map_half_size = int(GROUND_SCALE//2)
+        self.map_half_size = MAP_HALF_SIZE
 
     def remove_statue(self, trigger):
         if trigger in self.statue_triggers:
