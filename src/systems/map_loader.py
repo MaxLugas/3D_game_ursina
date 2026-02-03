@@ -1,10 +1,10 @@
 from ursina import *
 from src.utils.object_setup import setup_collidable_object
-from src.core.config import ROCK_COLLIDER_SHRINK, TREE_COLLIDER_SHRINK, STATUE_COLLIDER_SHRINK
+from src.core.config import ROCK_COLLIDER_SHRINK, TREE_COLLIDER_SHRINK, STATUE_COLLIDER_SHRINK, ASSETS_DIR
 
 statue_triggers = []
 
-def load_map(filename='assets/map.txt'):
+def load_map(filename=f'{ASSETS_DIR}/map.txt'):
     world_entities = []
     statue_triggers = []
 

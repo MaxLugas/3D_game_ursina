@@ -1,6 +1,6 @@
 from ursina import *
 from pathlib import Path
-from src.core.config import GROUND_SCALE, WINDOW_TITLE, WINDOW_BORDERLESS, WINDOW_VSYNC, SHOW_COLLIDERS
+from src.core.config import GROUND_SCALE, WINDOW_TITLE, WINDOW_BORDERLESS, WINDOW_VSYNC, SHOW_COLLIDERS, ASSETS_DIR
 
 
 def init_engine():
@@ -8,7 +8,7 @@ def init_engine():
         title=WINDOW_TITLE,
         borderless=WINDOW_BORDERLESS,
         vsync=WINDOW_VSYNC,
-        asset_folder=Path(__file__).parent / 'assets'
+        asset_folder=ASSETS_DIR
     )
     window.show_colliders = SHOW_COLLIDERS
 
