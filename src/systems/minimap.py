@@ -1,10 +1,10 @@
 from ursina import *
 from pathlib import Path
-from src.core.config import GROUND_SCALE, MINIMAP_SIZE, MINIMAP_PLAYER_MARKER_SCALE, MINIMAP_NPC_MARKER_SCALE
+from src.core.config import MAP_HALF_SIZE, MINIMAP_SIZE, MINIMAP_PLAYER_MARKER_SCALE, MINIMAP_NPC_MARKER_SCALE
 
 
 class Minimap:
-    def __init__(self, player, world_entities, npcs, map_half_size=(GROUND_SCALE // 2), minimap_size=MINIMAP_SIZE):
+    def __init__(self, player, world_entities, npcs, map_half_size=MAP_HALF_SIZE, minimap_size=MINIMAP_SIZE):
         """
         player: ссылка на игрока
         world_entities: список всех объектов (камни, деревья, статуи)
