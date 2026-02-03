@@ -1,5 +1,6 @@
 from ursina import *
 from src.utils.object_setup import setup_collidable_object
+from src.core.config import ROCK_COLLIDER_SHRINK, TREE_COLLIDER_SHRINK, STATUE_COLLIDER_SHRINK
 
 statue_triggers = []
 
@@ -33,7 +34,7 @@ def load_map(filename='assets/map.txt'):
                     position=(world_x, 3, world_z),
                     enabled=False
                 )
-                invoke(setup_collidable_object, rock, shrink_factor=0.5, delay=0)
+                invoke(setup_collidable_object, rock, shrink_factor=ROCK_COLLIDER_SHRINK, delay=0)
                 world_entities.append(rock)
 
             elif char == 'T':
@@ -44,7 +45,7 @@ def load_map(filename='assets/map.txt'):
                     position=(world_x, 3, world_z),
                     enabled=False
                 )
-                invoke(setup_collidable_object, tree, shrink_factor=0.5, delay=0)
+                invoke(setup_collidable_object, tree, shrink_factor=TREE_COLLIDER_SHRINK, delay=0)
                 world_entities.append(tree)
 
             elif char == 'S':
@@ -64,7 +65,7 @@ def load_map(filename='assets/map.txt'):
                 )
                 trigger.visual = statue
                 statue_triggers.append(trigger)
-                invoke(setup_collidable_object, statue, shrink_factor=1, delay=0)
-                world_entities.append(statue)  # ← добавляем саму статую
+                invoke(setup_collidable_object, statue, shrink_factor=STATUE_COLLIDER_SHRINK, delay=0)
+                world_entities.append(statue)
 
     return world_entities, statue_triggers

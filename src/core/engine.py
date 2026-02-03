@@ -1,9 +1,16 @@
 from ursina import *
 from pathlib import Path
+from src.core.config import GROUND_SCALE, WINDOW_TITLE, WINDOW_BORDERLESS, WINDOW_VSYNC, SHOW_COLLIDERS
+
 
 def init_engine():
-    app = Ursina(title="Game", borderless=False, vsync=False, asset_folder=Path(__file__).parent / 'assets')
-    window.show_colliders = True
+    app = Ursina(
+        title=WINDOW_TITLE,
+        borderless=WINDOW_BORDERLESS,
+        vsync=WINDOW_VSYNC,
+        asset_folder=Path(__file__).parent / 'assets'
+    )
+    window.show_colliders = SHOW_COLLIDERS
 
     Sky(texture='sky_sunset')
     sun = DirectionalLight(shadows=True)
@@ -12,7 +19,7 @@ def init_engine():
 
     ground = Entity(
         model='plane',
-        scale=70,
+        scale=GROUND_SCALE,
         texture='grass',
         texture_scale=(8, 8),
         collider='mesh',
