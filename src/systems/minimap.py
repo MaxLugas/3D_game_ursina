@@ -1,9 +1,10 @@
 from ursina import *
 from pathlib import Path
+from src.core.config import GROUND_SCALE, MINIMAP_SIZE, MINIMAP_PLAYER_MARKER_SCALE, MINIMAP_NPC_MARKER_SCALE
 
 
 class Minimap:
-    def __init__(self, player, world_entities, npcs, map_half_size=35, minimap_size=0.3):
+    def __init__(self, player, world_entities, npcs, map_half_size=(GROUND_SCALE // 2), minimap_size=MINIMAP_SIZE):
         """
         player: ссылка на игрока
         world_entities: список всех объектов (камни, деревья, статуи)
@@ -52,7 +53,7 @@ class Minimap:
 
     def _create_markers(self):
         # Игрок
-        scale_player = 0.015
+        scale_player = MINIMAP_PLAYER_MARKER_SCALE
         if self.player_texture:
             self.player_marker = Entity(
                 parent=camera.ui,
@@ -100,7 +101,7 @@ class Minimap:
                 parent=camera.ui,
                 model='circle',
                 color=color.red,
-                scale=0.012,
+                scale=MINIMAP_NPC_MARKER_SCALE,
                 always_on_top=True
             )
             self.markers.append((npc, marker))

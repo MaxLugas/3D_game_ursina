@@ -11,7 +11,7 @@ from src.entities.npc import AnimatedNPC
 from ursina import *
 from src.systems.minimap import Minimap
 from src.core.config import PLAYER_SPEED, PLAYER_SECOND_JUMP_HEIGHT, MAP_HALF_SIZE, PLAYER_GRAVITY, \
-    PLAYER_MOUSE_SENSITIVITY, NPC_SPEED_WALK
+    PLAYER_MOUSE_SENSITIVITY, NPC_SPEED_WALK, ASSETS_DIR
 
 game_logic = None
 player = None
@@ -29,7 +29,7 @@ def main():
         position=(0, 1, 0)
     )
 
-    world_entities, statue_triggers_list = load_map('assets/map.txt')
+    world_entities, statue_triggers_list = load_map(f'{ASSETS_DIR}/map.txt')
 
     npcs = [
         AnimatedNPC(

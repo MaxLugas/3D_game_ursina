@@ -2,10 +2,10 @@ from ursina import *
 from direct.actor.Actor import Actor
 from math import atan2, degrees
 from src.utils.object_setup import setup_collidable_object
-from src.core.config import COLLIDER_SHRINK_FACTOR
+from src.core.config import COLLIDER_SHRINK_FACTOR, NPC_SPEED_WALK, MODELS_DIR
 
 class AnimatedNPC:
-    def __init__(self, start_pos, end_pos, speed=1, model_path='assets/models/Droid.glb',
+    def __init__(self, start_pos, end_pos, speed=NPC_SPEED_WALK, model_path=f'{MODELS_DIR}/Droid.glb',
                  anim_name=None, fix_orientation=True, scale=2.0, shrink_factor=COLLIDER_SHRINK_FACTOR):
         self.start_pos = Vec3(start_pos)
         self.end_pos = Vec3(end_pos)

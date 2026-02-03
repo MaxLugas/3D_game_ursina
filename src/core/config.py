@@ -2,13 +2,13 @@
 from pathlib import Path
 
 # ================ Пути ================
-BASE_DIR = Path(__file__).parent.parent.parent  # корень проекта
+BASE_DIR = Path(__file__).parent.parent.parent
 ASSETS_DIR = BASE_DIR / 'assets'
 MODELS_DIR = ASSETS_DIR / 'models'
 AUDIO_DIR = ASSETS_DIR / 'audio'
 
 # ================ Игровые параметры ================
-GROUND_SCALE = 70
+GROUND_SCALE = 100
 MAP_HALF_SIZE = int(GROUND_SCALE // 2)
 
 PLAYER_SPEED = 8
@@ -28,8 +28,8 @@ FIRE_ANIM_END_FRAME = 105
 RELOAD_ANIM_START_FRAME = 106
 RELOAD_ANIM_END_FRAME = 150
 
-SOUND_FIRE_NAME = 'Glock_fire'
-SOUND_RELOAD_NAME = 'Glock_reload'
+SOUND_GLOCK_FIRE = 'Glock_fire'
+SOUND_GLOCK_RELOAD = 'Glock_reload'
 RELOAD_PITCH = 0.62
 
 # ================ NPC ================
