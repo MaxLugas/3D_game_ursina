@@ -3,7 +3,7 @@ from pathlib import Path
 
 # ================ Пути ================
 BASE_DIR = Path(__file__).parent.parent.parent
-ASSETS_DIR = BASE_DIR / 'assets'
+ASSETS_DIR = Path(__file__).parent.parent / 'assets'
 MODELS_DIR = ASSETS_DIR / 'models'
 AUDIO_DIR = ASSETS_DIR / 'audio'
 
@@ -18,9 +18,9 @@ PLAYER_GRAVITY = 1
 PLAYER_MOUSE_SENSITIVITY = (40, 40)
 
 # ================ Оружие ================
-WEAPON_MODEL = 'weapon_Glock.glb'
-WEAPON_SCALE = 0.8
-MAGAZINE_SIZE = 5
+GLOCK_WEAPON_MODEL = 'weapon_Glock.glb'
+GLOCK_WEAPON_SCALE = 0.8
+GLOCK_MAGAZINE_SIZE = 5
 ANIM_FPS = 60
 
 FIRE_ANIM_START_FRAME = 86

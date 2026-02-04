@@ -4,6 +4,10 @@ from pathlib import Path
 from panda3d.core import getModelPath
 from ursina.prefabs.first_person_controller import FirstPersonController
 from ursina import application
+
+from src.core.config import PLAYER_SPEED, PLAYER_JUMP_HEIGHT, PLAYER_GRAVITY, GLOCK_WEAPON_MODEL, GLOCK_MAGAZINE_SIZE, \
+    SKY_TEXTURE, GRASS_TEXTURE, DIRECTIONAL_LIGHT_DIRECTION, AMBIENT_LIGHT_COLOR
+
 application.asset_folder = Path(__file__).parent.parent / 'src' / 'assets'
 
 # === Настройка путей ===
@@ -13,25 +17,25 @@ getModelPath().append_directory(str(model_dir))
 app = Ursina(title="FPS Weapon Test", borderless=False, vsync=True)
 
 # Небо и освещение
-Sky(texture='sky_sunset')
-DirectionalLight(shadows=True).look_at(Vec3(1, -1, -1))
-AmbientLight(color=color.rgb(0.6, 0.6, 0.6))
+Sky(texture=SKY_TEXTURE)
+DirectionalLight(shadows=True).look_at(DIRECTIONAL_LIGHT_DIRECTION)
+AmbientLight(color=AMBIENT_LIGHT_COLOR)
 
 # Пол
 ground = Entity(
     model='plane',
     scale=50,
-    texture='grass',
+    texture=GRASS_TEXTURE,
     collider='mesh',
     color=color.green.tint(-0.1)
 )
 
 # Игрок
-player = FirstPersonController(speed=8, jump_height=2, gravity=1, position=(0, 1, 0))
+player = FirstPersonController(speed=PLAYER_SPEED, jump_height=PLAYER_JUMP_HEIGHT, gravity=PLAYER_GRAVITY, position=(0, 1, 0))
 
 # === Класс FPS Weapon ===
 class FPSWeapon:
-    def __init__(self, model_path='weapon_Glock.glb', scale=2):
+    def __init__(self, model_path=GLOCK_WEAPON_MODEL, scale=2):
         self.holder = camera.attach_new_node("fps_weapon")
         self.holder.set_pos(0.25, -1.36, 0.7)
         self.holder.set_hpr(190, 0, 0)
@@ -58,8 +62,8 @@ class FPSWeapon:
 
         # Состояние оружия
         self.is_animating = False
-        self.shots_fired = 0          # ← добавлено
-        self.magazine_size = 5        # ← максимум 5 выстрелов
+        self.shots_fired = 0
+        self.magazine_size = GLOCK_MAGAZINE_SIZE        # ← максимум N выстрелов
 
         # Сразу достаём
         if 'fire' in self.anim_names and self.anim_names['fire'] in self.available:
@@ -128,7 +132,7 @@ class FPSWeapon:
                 self.play_animation('reload')
 
 # Создаём оружие
-weapon = FPSWeapon(model_path='weapon_Glock.glb', scale=0.8)
+weapon = FPSWeapon(model_path=GLOCK_WEAPON_MODEL, scale=0.8)
 
 def update():
     weapon.update()

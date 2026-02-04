@@ -1,0 +1,20 @@
+{
+  "objects": [
+    {"type": "statue", "nx": -0.75, "nz": -0.85},
+    {"type": "statue", "nx": -0.25, "nz": -0.85},
+    {"type": "tree",   "nx":  0.60, "nz": -0.85},
+    {"type": "tree",   "nx":  0.70, "nz": -0.85},
+    {"type": "tree",   "nx":  0.80, "nz": -0.85},
+    {"type": "tree",   "nx":  0.90, "nz": -0.85},
+    {"type": "tree",   "nx":  1.00, "nz": -0.85},
+    {"type": "tree",   "nx":  1.00, "nz": -0.75},
+    {"type": "rock",   "nx": -0.55, "nz": -0.60},
+    {"type": "statue", "nx": -0.45, "nz": -0.35},
+    {"type": "rock",   "nx": -0.85, "nz": -0.10},
+    {"type": "statue", "nx":  0.35, "nz":  0.10},
+    {"type": "statue", "nx":  0.85, "nz":  0.10},
+    {"type": "rock",   "nx": -0.25, "nz":  0.35},
+    {"type": "rock",   "nx":  0.75, "nz":  0.35},
+    {"type": "rock",   "nx":  0.25, "nz":  0.60}
+  ]
+}
