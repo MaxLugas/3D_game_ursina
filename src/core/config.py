@@ -59,5 +59,7 @@ SHOW_COLLIDERS = True
 
 # ================ Окружение (небо, свет) ================
 SKY_TEXTURE = 'sky_sunset'          # имя текстуры из assets/textures/
+GRASS_TEXTURE='grass'
 DIRECTIONAL_LIGHT_DIRECTION = Vec3(1, -1, -1)
-AMBIENT_LIGHT_COLOR = color.rgb(0.3, 0.3, 0.35)
+AMBIENT_LIGHT_COLOR = color.rgb(0.1, 0.1, 0.15)
+DIRECTIONAL_LIGHT_COLOR = color.white

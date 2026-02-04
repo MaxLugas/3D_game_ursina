@@ -1,10 +1,13 @@
 from ursina.prefabs.first_person_controller import FirstPersonController
 from ursina import *
 
+from src.core.config import PLAYER_SECOND_JUMP_HEIGHT, PLAYER_JUMP_HEIGHT
+
+
 class DoubleJumpPlayer(FirstPersonController):
     # Настройки по умолчанию — менять ТОЛЬКО здесь!
-    DEFAULT_JUMP_HEIGHT = 2.0          # первый прыжок
-    DEFAULT_SECOND_JUMP_HEIGHT = 3.0   # второй прыжок
+    DEFAULT_JUMP_HEIGHT = PLAYER_JUMP_HEIGHT          # первый прыжок
+    DEFAULT_SECOND_JUMP_HEIGHT = PLAYER_SECOND_JUMP_HEIGHT   # второй прыжок
 
     def __init__(self, **kwargs):
         # Извлекаем параметры, специфичные для двойного прыжка
