@@ -5,7 +5,6 @@ from src.core.config import PLAYER_SECOND_JUMP_HEIGHT, PLAYER_JUMP_HEIGHT
 
 
 class DoubleJumpPlayer(FirstPersonController):
-    # Настройки по умолчанию — менять ТОЛЬКО здесь!
     DEFAULT_JUMP_HEIGHT = PLAYER_JUMP_HEIGHT          # первый прыжок
     DEFAULT_SECOND_JUMP_HEIGHT = PLAYER_SECOND_JUMP_HEIGHT   # второй прыжок
 

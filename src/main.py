@@ -29,7 +29,7 @@ def main():
         position=(0, 1, 0)
     )
 
-    world_entities, statue_triggers_list = load_map('assets/map.txt')
+    world_entities, statue_triggers_list = load_map('map.json')
 
     npcs = [
         AnimatedNPC(
