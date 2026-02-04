@@ -21,7 +21,7 @@ def load_map(filename='map.json'):
         print(f"❌ Ошибка парсинга JSON: {e}")
         return world_entities, statue_triggers
 
-    world_radius = GROUND_SCALE * 0.9 / 2.0  # 90% от поля
+    world_radius = (GROUND_SCALE * 0.9) / 2.0  # 90% от поля
 
     # === Создание объектов ===
     for obj in data.get("objects", []):
