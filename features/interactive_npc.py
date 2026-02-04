@@ -2,10 +2,12 @@ from ursina import Vec3, time, distance
 from direct.actor.Actor import Actor
 from math import atan2, degrees
 
+from src.core.config import NPC_SPEED_WALK, NPC_SPEED_RUN, NPC_ATTACK_DISTANCE, NPC_IDLE_DISTANCE
+
 class AnimatedNPC:
     def __init__(self, start_pos, player, model_path='Droid.glb',
                  idle_anim='Idle', walk_anim='Walking', run_anim='Running', skill_anim='Skill_01',
-                 fix_orientation=True, scale=2.0, speed_walk=2.0, speed_run=5.0):
+                 fix_orientation=True, scale=2.0, speed_walk=NPC_SPEED_WALK, speed_run=NPC_SPEED_RUN):
         self.player = player
         self.speed_walk = speed_walk
         self.speed_run = speed_run
@@ -58,22 +60,22 @@ class AnimatedNPC:
         current_anim = self.actor.getCurrentAnim()
 
         # === ВСЕГДА поворачиваться к игроку, если он близко ===
-        if distance_to_player < 15:
+        if distance_to_player < NPC_IDLE_DISTANCE:
             self._look_at_player(player_pos)
 
         # === Логика состояний ===
         if self.state == 'idle':
-            if distance_to_player < 15:
+            if distance_to_player < NPC_IDLE_DISTANCE:
                 self.state = 'walking'
                 if self.walk_anim in self.actor.get_anim_names():
                     self.actor.loop(self.walk_anim)
 
         elif self.state == 'walking':
-            if distance_to_player < 10:
+            if distance_to_player < NPC_ATTACK_DISTANCE:
                 self.state = 'attacking'
                 if self.skill_anim in self.actor.get_anim_names():
                     self.actor.play(self.skill_anim)
-            elif distance_to_player >= 15:
+            elif distance_to_player >= NPC_IDLE_DISTANCE:
                 self.state = 'idle'
                 if self.idle_anim in self.actor.get_anim_names():
                     self.actor.loop(self.idle_anim)
@@ -87,7 +89,7 @@ class AnimatedNPC:
                     self.actor.loop(self.run_anim)
 
         elif self.state == 'running':
-            if distance_to_player >= 15:
+            if distance_to_player >= NPC_IDLE_DISTANCE:
                 self.state = 'idle'
                 if self.idle_anim in self.actor.get_anim_names():
                     self.actor.loop(self.idle_anim)
@@ -117,6 +119,6 @@ npc = AnimatedNPC(
     walk_anim='Walking',
     run_anim='Running',
     skill_anim='Skill_01',
-    speed_walk=2.0,
-    speed_run=5.0
+    speed_walk=NPC_SPEED_WALK,
+    speed_run=NPC_SPEED_RUN
 )
