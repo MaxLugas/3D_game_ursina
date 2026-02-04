@@ -10,17 +10,18 @@ from src.entities.player import create_player
 from src.entities.npc import AnimatedNPC
 from ursina import *
 from src.systems.minimap import Minimap
+from src.entities.weapon import FPSWeapon
 from src.core.config import PLAYER_SPEED, PLAYER_SECOND_JUMP_HEIGHT, MAP_HALF_SIZE, PLAYER_GRAVITY, \
-    PLAYER_MOUSE_SENSITIVITY, NPC_SPEED_WALK
+    PLAYER_MOUSE_SENSITIVITY, NPC_SPEED_WALK, MODELS_DIR, GLOCK_WEAPON_MODEL
 
 game_logic = None
 player = None
 minimap = None
+weapon=None
 
 def main():
-    global game_logic, player, minimap
+    global game_logic, player, minimap, weapon
     app = init_engine()
-
     player = create_player(
         speed=PLAYER_SPEED,
         second_jump_height=PLAYER_SECOND_JUMP_HEIGHT,
@@ -28,7 +29,7 @@ def main():
         mouse_sensitivity=PLAYER_MOUSE_SENSITIVITY,
         position=(0, 1, 0)
     )
-
+    weapon = FPSWeapon(model_path=GLOCK_WEAPON_MODEL, scale=0.8)
     world_entities, statue_triggers_list = load_map('map.json')
 
     npcs = [
@@ -62,6 +63,8 @@ def main():
 def update():
     if game_logic is not None:
         game_logic.update()
+    if weapon is not None:
+        weapon.update()
     if minimap is not None:
         minimap.update()
 

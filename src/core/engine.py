@@ -1,8 +1,9 @@
+from panda3d.core import getModelPath
 from ursina import *
 from pathlib import Path
 from ursina.shaders import lit_with_shadows_shader
 from src.core.config import GROUND_SCALE, WINDOW_TITLE, WINDOW_BORDERLESS, WINDOW_VSYNC, SHOW_COLLIDERS, ASSETS_DIR, \
-    DIRECTIONAL_LIGHT_DIRECTION, SKY_TEXTURE, AMBIENT_LIGHT_COLOR, DIRECTIONAL_LIGHT_COLOR, GRASS_TEXTURE
+    DIRECTIONAL_LIGHT_DIRECTION, SKY_TEXTURE, AMBIENT_LIGHT_COLOR, DIRECTIONAL_LIGHT_COLOR, GRASS_TEXTURE, MODELS_DIR
 
 
 def init_engine():
@@ -12,7 +13,10 @@ def init_engine():
         vsync=WINDOW_VSYNC,
         asset_folder=ASSETS_DIR
     )
+    getModelPath().append_directory(str(MODELS_DIR))
+
     window.show_colliders = SHOW_COLLIDERS
+    window.cursor_hidden = True
 
     Sky(texture=SKY_TEXTURE)
     sun = DirectionalLight(shadows=True, color=DIRECTIONAL_LIGHT_COLOR)
