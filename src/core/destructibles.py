@@ -1,0 +1,3 @@
+DESTRUCTIBLE_OBJECTS = {
+    'target'
+}
