@@ -12,7 +12,7 @@ from ursina import *
 from src.systems.minimap import Minimap
 from src.entities.weapon import FPSWeapon
 from src.core.config import PLAYER_SPEED, PLAYER_SECOND_JUMP_HEIGHT, MAP_HALF_SIZE, PLAYER_GRAVITY, \
-    PLAYER_MOUSE_SENSITIVITY, NPC_SPEED_WALK, MODELS_DIR, GLOCK_WEAPON_MODEL
+    PLAYER_MOUSE_SENSITIVITY, NPC_SPEED_WALK, GLOCK_WEAPON_MODEL, GLOCK_WEAPON_SCALE
 
 game_logic = None
 player = None
@@ -29,7 +29,7 @@ def main():
         mouse_sensitivity=PLAYER_MOUSE_SENSITIVITY,
         position=(0, 1, 0)
     )
-    weapon = FPSWeapon(model_path=GLOCK_WEAPON_MODEL, scale=0.8)
+    weapon = FPSWeapon(model_path=GLOCK_WEAPON_MODEL, scale=GLOCK_WEAPON_SCALE)
     world_entities, statue_triggers_list = load_map('map.json')
 
     npcs = [

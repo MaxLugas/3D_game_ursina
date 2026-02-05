@@ -95,6 +95,8 @@ class Minimap:
                 col = color.brown
             elif 'flashlight' in str(ent.model):
                 col = color.yellow
+            elif 'target' in str(ent.model):
+                col = color.azure
 
             marker = Entity(
                 parent=camera.ui,
