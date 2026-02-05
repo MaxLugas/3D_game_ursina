@@ -66,11 +66,14 @@ def update():
     if weapon is not None:
         weapon.update()
     if minimap is not None:
-        minimap.update()
+        is_tab_held = held_keys['tab']
+        minimap.set_visible(is_tab_held)
+        if is_tab_held:
+            minimap.update()
 
 
 def input(key):
-    global player, game_logic
+    global player, game_logic, minimap
     if key == 'e' and game_logic is not None:
         hit_info = raycast(
             origin=camera.world_position,

@@ -1,6 +1,7 @@
 from ursina import *
 from pathlib import Path
-from src.core.config import MAP_HALF_SIZE, MINIMAP_SIZE, MINIMAP_PLAYER_MARKER_SCALE, MINIMAP_NPC_MARKER_SCALE
+from src.core.config import MAP_HALF_SIZE, MINIMAP_SIZE, MINIMAP_PLAYER_MARKER_SCALE, MINIMAP_NPC_MARKER_SCALE, \
+    MINIMAP_VISIBILITY
 
 
 class Minimap:
@@ -19,14 +20,12 @@ class Minimap:
         self.minimap_size = minimap_size
 
         # --- Фон мини-карты ---
-        margin_x = -0.36  # отступ от левого края
-        margin_y = 0.02  # отступ от нижнего края
         self.bg = Entity(
             parent=camera.ui,
             model='quad',
             scale=(minimap_size, minimap_size),
-            position=(-0.5 + margin_x + minimap_size / 2, -0.5 + margin_y + minimap_size / 2),
-            color=color.rgba(0, 0, 0, 180)
+            position=(0,0),
+            color=color.rgba(0, 0, 0, MINIMAP_VISIBILITY)
         )
 
         # --- Маркеры ---
@@ -41,15 +40,22 @@ class Minimap:
             self.player_texture = None
 
         self._create_markers()
+        self.set_visible(False)
 
     def _world_to_minimap(self, world_pos):
-        nx = world_pos[0] / self.map_half_size  # [-1, 1]
-        nz = world_pos[2] / self.map_half_size  # [-1, 1]
+        nx = world_pos[0] / self.map_half_size
+        nz = world_pos[2] / self.map_half_size
         offset = self.minimap_size / 2
         return Vec2(
             self.bg.position.x + nx * offset,
             self.bg.position.y + nz * offset
         )
+
+    def set_visible(self, visible: bool):
+        self.bg.enabled = visible
+        self.player_marker.enabled = visible
+        for _, marker in self.markers:
+            marker.enabled = visible
 
     def _create_markers(self):
         # Игрок

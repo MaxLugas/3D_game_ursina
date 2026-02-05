@@ -43,17 +43,36 @@ class FPSWeapon:
         self.shots_fired = 0
         self.magazine_size = GLOCK_MAGAZINE_SIZE
 
-        # Сразу достаём
-        if 'fire' in self.anim_names and self.anim_names['fire'] in self.available:
-            self.actor.pose(self.anim_names['fire'], 105)
+        self.ammo_text = Text(
+            text=self._get_ammo_text(),
+            origin=(0, 0),
+            position=window.bottom_right + Vec2(-0.13, 0.1),
+            scale=1,
+            color=color.white,
+            background=True,
+            parent=camera.ui
+        )
 
-        self.fire_sound = Audio('audio/Glock_fire', autoplay=False)
-        self.reload_sound = Audio('audio/Glock_reload', autoplay=False, pitch=0.62)
+        # Начальная поза
+        if 'fire' in self.anim_names and self.anim_names['fire'] in self.available:
+            self.actor.pose(self.anim_names['fire'], FIRE_ANIM_END_FRAME)
+
+        # Звуки
+        self.fire_sound = Audio(SOUND_GLOCK_FIRE, autoplay=False)
+        self.reload_sound = Audio(SOUND_GLOCK_RELOAD, autoplay=False, pitch=RELOAD_PITCH)
+
+
+    def _get_ammo_text(self):
+        remaining = self.magazine_size - self.shots_fired
+        return f"Патроны: {remaining}/{self.magazine_size}"
+
+    def _update_ammo_display(self):
+        if self.ammo_text:
+            self.ammo_text.text = self._get_ammo_text()
 
     def play_animation(self, action_key):
         if self.is_animating:
             return
-
         if action_key == 'fire' and self.shots_fired >= self.magazine_size:
             return
 
@@ -64,17 +83,17 @@ class FPSWeapon:
         self.is_animating = True
 
         if action_key == 'fire':
-            from_frame = 86
-            to_frame = 105
+            from_frame = FIRE_ANIM_START_FRAME
+            to_frame = FIRE_ANIM_END_FRAME
             self.actor.play(anim_name, fromFrame=from_frame, toFrame=to_frame)
 
             num_frames = to_frame - from_frame
-            fps = 60
-            duration = num_frames / fps
-
+            duration = num_frames / ANIM_FPS
             invoke(self._on_fire_animation_end, anim_name, delay=duration)
 
             self.shots_fired += 1
+            self._update_ammo_display()
+
             if self.shots_fired >= self.magazine_size:
                 invoke(self._start_reload_after_empty, delay=duration + 0.1)
 
@@ -83,24 +102,24 @@ class FPSWeapon:
         else:
             self.actor.play(anim_name)
             frame_count = self.actor.get_num_frames(anim_name)
-            duration = frame_count / 60
+            duration = frame_count / ANIM_FPS
             invoke(self._on_animation_end, anim_name, delay=duration)
 
-            if action_key in 'reload':
+            if action_key == 'reload':
                 self.reload_sound.play()
 
     def _start_reload_after_empty(self):
         self.play_animation('reload')
 
     def _on_fire_animation_end(self, anim_name):
-        self.actor.pose(anim_name, 105)
+        self.actor.pose(anim_name, FIRE_ANIM_END_FRAME)
         self.is_animating = False
 
     def _on_animation_end(self, anim_name):
         self.is_animating = False
-        # Если завершилась перезарядка — сбросить счётчик
         if anim_name == self.anim_names.get('reload'):
             self.shots_fired = 0
+            self._update_ammo_display()
 
     def update(self):
         if not self.is_animating:
