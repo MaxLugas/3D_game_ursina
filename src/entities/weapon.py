@@ -1,5 +1,6 @@
 from ursina import *
 from direct.actor.Actor import Actor
+from src.core.destructibles import DESTRUCTIBLE_OBJECTS
 from src.core.config import (
     GLOCK_WEAPON_MODEL,
     GLOCK_MAGAZINE_SIZE,
@@ -98,6 +99,19 @@ class FPSWeapon:
                 invoke(self._start_reload_after_empty, delay=duration + 0.1)
 
             self.fire_sound.play()
+
+            # === Проверка попадания в разрушаемые объекты ===
+            hit_info = raycast(
+                origin=camera.world_position,
+                direction=camera.forward,
+                distance=100,
+                ignore=(camera,)
+            )
+            if hit_info.hit:
+                entity = hit_info.entity
+                model_name = entity.model.name if entity.model else None
+                if model_name in DESTRUCTIBLE_OBJECTS:
+                    destroy(entity)
 
         else:
             self.actor.play(anim_name)
