@@ -8,6 +8,8 @@
     {"type": "tree",   "nx":  0.90, "nz": -0.85},
     {"type": "tree",   "nx":  1.00, "nz": -0.85},
     {"type": "tree",   "nx":  1.00, "nz": -0.75},
+    {"type": "target",   "nx":  1.00, "nz": -0.6},
+    {"type": "target",   "nx":  1.00, "nz": -0.5},
     {"type": "cottage",   "nx":  0.35, "nz": -0.6},
     {"type": "flashlight",   "nx":  0.50, "nz": -0.6},
     {"type": "rock",   "nx": -0.55, "nz": -0.60},

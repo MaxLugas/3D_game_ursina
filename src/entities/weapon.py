@@ -13,7 +13,7 @@ from src.core.config import (
 )
 
 class FPSWeapon:
-    def __init__(self, model_path=MODELS_DIR/GLOCK_WEAPON_MODEL, scale=2):
+    def __init__(self, model_path=MODELS_DIR/GLOCK_WEAPON_MODEL, scale=GLOCK_WEAPON_SCALE):
         self.holder = camera.attach_new_node("fps_weapon")
         self.holder.set_pos(0.25, -1.36, 0.7)
         self.holder.set_hpr(190, 0, 0)
