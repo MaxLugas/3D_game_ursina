@@ -2,7 +2,8 @@ from ursina import *
 import json
 from pathlib import Path
 from src.utils.object_setup import setup_collidable_object
-from src.core.config import ROCK_COLLIDER_SHRINK, TREE_COLLIDER_SHRINK, STATUE_COLLIDER_SHRINK, ASSETS_DIR, GROUND_SCALE
+from src.core.config import ROCK_COLLIDER_SHRINK, TREE_COLLIDER_SHRINK, STATUE_COLLIDER_SHRINK, ASSETS_DIR, \
+    GROUND_SCALE, COTTAGE_COLLIDER_SHRINK, FLASHLIGHT_COLLIDER_SHRINK
 
 statue_triggers = []
 
@@ -52,6 +53,28 @@ def load_map(filename='map.json'):
                 enabled=False
             )
             invoke(setup_collidable_object, entity, shrink_factor=TREE_COLLIDER_SHRINK, delay=0)
+            world_entities.append(entity)
+
+        elif obj_type == "cottage":
+            entity = Entity(
+                model='cottage',
+                texture='cottage',
+                scale=5,
+                position=(world_x, 3, world_z),
+                enabled=False
+            )
+            invoke(setup_collidable_object, entity, shrink_factor=COTTAGE_COLLIDER_SHRINK, delay=0)
+            world_entities.append(entity)
+
+        elif obj_type == "flashlight":
+            entity = Entity(
+                model='flashlight',
+                texture='flashlight',
+                scale=3,
+                position=(world_x, 3, world_z),
+                enabled=False
+            )
+            invoke(setup_collidable_object, entity, shrink_factor=FLASHLIGHT_COLLIDER_SHRINK, delay=0)
             world_entities.append(entity)
 
         elif obj_type == "statue":
