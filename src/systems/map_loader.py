@@ -1,6 +1,5 @@
 from ursina import *
 import json
-from pathlib import Path
 from src.utils.object_setup import setup_collidable_object
 from src.core.config import ROCK_COLLIDER_SHRINK, TREE_COLLIDER_SHRINK, STATUE_COLLIDER_SHRINK, ASSETS_DIR, \
     GROUND_SCALE, COTTAGE_COLLIDER_SHRINK, FLASHLIGHT_COLLIDER_SHRINK, TARGET_COLLIDER_SHRINK
