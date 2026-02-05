@@ -1,7 +1,7 @@
 from ursina import *
 from pathlib import Path
 from src.core.config import MAP_HALF_SIZE, MINIMAP_SIZE, MINIMAP_PLAYER_MARKER_SCALE, MINIMAP_NPC_MARKER_SCALE, \
-    MINIMAP_VISIBILITY
+    MINIMAP_VISIBILITY, ASSETS_DIR
 
 
 class Minimap:
@@ -33,7 +33,7 @@ class Minimap:
         self.markers = []  # все маркеры кроме игрока
 
         # Загрузка PNG-маркера игрока (если есть)
-        player_icon_path = Path(__file__).parent.parent / 'assets' / 'textures' / 'player_minimap.png'
+        player_icon_path = ASSETS_DIR / 'textures' / 'player_minimap.png'
         if player_icon_path.exists():
             self.player_texture = Texture(str(player_icon_path))
         else:
@@ -86,11 +86,15 @@ class Minimap:
 
             col = color.white
             if hasattr(ent, 'visual') or (hasattr(ent, 'model') and 'statue' in str(ent.model)):
-                col = color.yellow
+                col = color.orange
             elif 'rock' in str(ent.model):
                 col = color.gray
             elif 'tree' in str(ent.model):
                 col = color.green
+            elif 'cottage' in str(ent.model):
+                col = color.brown
+            elif 'flashlight' in str(ent.model):
+                col = color.yellow
 
             marker = Entity(
                 parent=camera.ui,

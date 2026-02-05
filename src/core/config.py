@@ -42,6 +42,8 @@ NPC_ATTACK_DISTANCE = 10  # переключение в attack
 COLLIDER_SHRINK_FACTOR = 0.8
 ROCK_COLLIDER_SHRINK = 0.5
 TREE_COLLIDER_SHRINK = 0.5
+COTTAGE_COLLIDER_SHRINK = 0.2
+FLASHLIGHT_COLLIDER_SHRINK = 0.2
 STATUE_COLLIDER_SHRINK = 1
 
 # ================ Мини-карта ================
@@ -50,7 +52,7 @@ MINIMAP_PLAYER_MARKER_COLOR = 'green'
 MINIMAP_NPC_MARKER_COLOR = 'red'
 MINIMAP_PLAYER_MARKER_SCALE = 0.015
 MINIMAP_NPC_MARKER_SCALE = 0.012
-MINIMAP_VISIBILITY=0.7
+MINIMAP_VISIBILITY = 0.7
 
 # ================ Ursina Engine ================
 WINDOW_TITLE = "Game"
@@ -59,8 +61,8 @@ WINDOW_VSYNC = False
 SHOW_COLLIDERS = True
 
 # ================ Окружение (небо, свет) ================
-SKY_TEXTURE = 'sky_sunset'          # имя текстуры из assets/textures/
-GRASS_TEXTURE='grass'
+SKY_TEXTURE = 'sky_sunset'  # имя текстуры из assets/textures/
+GRASS_TEXTURE = 'grass'
 DIRECTIONAL_LIGHT_DIRECTION = Vec3(1, -1, -1)
 AMBIENT_LIGHT_COLOR = color.rgb(0.1, 0.1, 0.15)
 DIRECTIONAL_LIGHT_COLOR = color.white
