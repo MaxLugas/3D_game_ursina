@@ -1,8 +1,8 @@
 from panda3d.core import getModelPath
 from ursina import *
-from ursina.shaders import lit_with_shadows_shader
 from src.core.config import GROUND_SCALE, WINDOW_TITLE, WINDOW_BORDERLESS, WINDOW_VSYNC, SHOW_COLLIDERS, ASSETS_DIR, \
     DIRECTIONAL_LIGHT_DIRECTION, SKY_TEXTURE, AMBIENT_LIGHT_COLOR, DIRECTIONAL_LIGHT_COLOR, GRASS_TEXTURE, MODELS_DIR
+from src.shaders.comics_shader import comics_shaders
 
 
 def init_engine():
@@ -28,7 +28,7 @@ def init_engine():
         texture=GRASS_TEXTURE,
         texture_scale=(40, 40),
         collider='box',
-        # shader=lit_with_shadows_shader,
+        shader=comics_shaders,
         color=color.green.tint(-0.1)
     )
 

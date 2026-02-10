@@ -12,6 +12,8 @@ from src.core.config import (
     SOUND_GLOCK_RELOAD,
     RELOAD_PITCH, MODELS_DIR
 )
+from src.shaders.comics_shader import comics_shaders
+from src.core.config import SPECULAR_FACTOR
 
 class FPSWeapon:
     def __init__(self, model_path=MODELS_DIR/GLOCK_WEAPON_MODEL, scale=GLOCK_WEAPON_SCALE):
@@ -23,6 +25,10 @@ class FPSWeapon:
         self.actor.reparent_to(self.holder)
         self.actor.set_scale(scale)
         self.actor.set_light_off(True)
+
+        # === ПРИМЕНЯЕМ КОМИКСНЫЙ ШЕЙДЕР ===
+        self.actor.set_shader(comics_shaders._shader)
+        # self.actor.set_shader_input("specular_factor", SPECULAR_FACTOR)
 
         self.anim_names = {
             'draw': 'Armature|Draw|BaseLayer',
