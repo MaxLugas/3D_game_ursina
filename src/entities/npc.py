@@ -9,35 +9,40 @@ from src.shaders.comics_shader import comics_shaders
 class AnimatedNPC:
     def __init__(self, start_pos, end_pos, speed=NPC_SPEED_WALK, model_path=f'{MODELS_DIR}/Droid.glb',
                  anim_name=None, fix_orientation=True, scale=2.0, shrink_factor=COLLIDER_SHRINK_FACTOR):
+
+        """
+        Инициализация анимированного NPC с перемещением между двумя точками.
+        | Initialize animated NPC moving between two points.
+        """
+
         self.start_pos = Vec3(start_pos)
         self.end_pos = Vec3(end_pos)
         self.speed = speed
-        self.move_to_end = True
+        self.move_to_end = True                            # Флаг направления движения | Movement direction flag
         self._scale = scale
         self._shrink_factor = shrink_factor
 
-        # === Актёр ===
+        # === Актёр | Actor creation===
         self.actor = Actor(model_path)
         self.actor.reparent_to(scene)
         self.actor.set_scale(self._scale)
-        self.actor.set_light_off()
+        self.actor.set_light_off()                         # Отключаем динамическое освещение | Disable dynamic lighting
 
         self.actor.set_shader(comics_shaders._shader)
-        # self.actor.set_shader_input("specular_factor", 0.0)
 
         if fix_orientation:
             self.actor.set_p(0)
 
         self.actor.set_pos(Vec3(start_pos[0], start_pos[1] + 0.1, start_pos[2]))
 
-        # Анимация
+        # Воспроизведение анимации | Play animation
         if anim_name is None:
             anims = self.actor.get_anim_names()
             anim_name = anims[0] if anims else None
         if anim_name:
             self.actor.loop(anim_name)
 
-        # === Коллайдер ===
+        # === Коллайдер | Collider setup===
         temp_ent = Entity(
             model=model_path,
             scale=self._scale,
@@ -69,6 +74,7 @@ class AnimatedNPC:
         self.collider_entity.visible = False
 
     def update(self):
+        # Достижение цели → смена направления | Reached target → reverse direction
         target = self.end_pos if self.move_to_end else self.start_pos
         current = Vec3(self.actor.get_x(), self.actor.get_y(), self.actor.get_z())
         direction = target - current
@@ -82,12 +88,12 @@ class AnimatedNPC:
 
         self.actor.set_pos(new_pos)
 
-        # Поворот по направлению движения
+        # Поворот модели по направлению движения (только по горизонтали) | Rotate model to face movement direction (horizontal only)
         if direction.x != 0 or direction.z != 0:
-            angle = atan2(direction.x, direction.z)
+            angle = atan2(direction.x, direction.z)        # atan2(dx, dz) для системы координат Ursina | atan2(dx, dz) for Ursina coordinate system
             self.actor.set_h(degrees(angle))
 
-        # Синхронизация коллайдера с актёром
+        # Синхронизация коллайдера с моделью | Sync collider with visual model
         self.collider_entity.position = Vec3(self.actor.get_x(), self.actor.get_y(), self.actor.get_z())
 
     def get_position(self):

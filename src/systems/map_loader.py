@@ -10,14 +10,15 @@ from src.core.config import (
     STATUE_COLOR, TARGET_COLOR, SPECULAR_FACTOR
 )
 
-statue_triggers = []
+statue_triggers = []                                    # Глобальный список триггеров статуй | Global list of statue triggers
 
 
 def load_map(filename='map.json'):
-    world_entities = []
-    statue_triggers = []
+    world_entities = []                                 # Список всех созданных игровых объектов | List of all created game entities
+    statue_triggers = []                                # Локальный список триггеров для статуй | Local list of statue triggers
     filepath = ASSETS_DIR / filename
 
+    # === Загрузка JSON-карты | JSON Map Loading ===
     try:
         with open(filepath, 'r', encoding='utf-8') as f:
             data = json.load(f)
@@ -28,28 +29,29 @@ def load_map(filename='map.json'):
         print(f"❌ Ошибка парсинга JSON: {e}")
         return world_entities, statue_triggers
 
-    world_radius = (GROUND_SCALE * 0.9) / 2.0
+    world_radius = (GROUND_SCALE * 0.9) / 2.0           # Радиус игрового мира (с отступом от краёв) | Game world radius (with margin from edges)
 
-    # === Создание объектов с комиксными цветами БЕЗ БЛИКОВ ===
+    # === Создание объектов | Entity Creation ===
     for obj in data.get("objects", []):
         obj_type = obj.get("type")
+        # Нормализованные координаты из JSON | Normalized coordinates from JSON
         nx = float(obj.get("nx", 0))
         nz = float(obj.get("nz", 0))
-        world_x = nx * world_radius
-        world_z = nz * world_radius
+        world_x = nx * world_radius                     # Преобразование в мировую координату X | Convert to world X coordinate
+        world_z = nz * world_radius                     # Преобразование в мировую координату Z | Convert to world Z coordinate
 
         if obj_type == "rock":
             entity = Entity(
                 model='rock',
                 texture='rock',
                 scale=2,
-                position=(world_x, 3, world_z),
+                position=(world_x, 3, world_z),         # Y=3 — поднят над землёй | Y=3 — raised above ground
                 shader=comics_shaders,
                 color=ROCK_COLOR,
-                enabled=False
+                enabled=False                           # Отложенная активация для оптимизации | Deferred activation for optimization
             )
             entity.color = entity.color.tint(0.3)
-            # Отключаем блики на уровне материала
+            # Отключаем блики | Disable specular highlights
             entity.set_shader_input("specular_factor", SPECULAR_FACTOR)
             invoke(setup_collidable_object, entity, shrink_factor=ROCK_COLLIDER_SHRINK, delay=0)
             world_entities.append(entity)
@@ -126,14 +128,16 @@ def load_map(filename='map.json'):
             )
             statue.color = statue.color.tint(0.2)
             statue.set_shader_input("specular_factor", SPECULAR_FACTOR)
-            statue.collider = None
+            statue.collider = None                      # Коллайдер у триггера | Collider on trigger
 
+            # Невидимый триггер для взаимодействия | Invisible trigger for player interaction
             trigger = Entity(
                 position=statue.position,
                 scale=Vec3(1, 1, 1),
                 collider='box',
                 visible=False
             )
+            # Связываем триггер с визуальной моделью | Link trigger to visual model
             trigger.visual = statue
             statue_triggers.append(trigger)
 
