@@ -11,15 +11,15 @@
 
 ## 🌟 Особенности / Features
 
-| Русский                                                       | English |
-|---------------------------------------------------------------|---------|
+| Русский                                                       | English                                      |
+|---------------------------------------------------------------|----------------------------------------------|
 | ✨ Стиль комикса с кастомным шейдером                          | ✨ Comic-book visual style with custom shader |
-| 🔫 Анимация оружия                                            | 🔫 Frame-accurate weapon animations |
-| 🦘 Двойной прыжок для динамичного геймплея                    | 🦘 Double jump for dynamic movement |
-| 💥 Разрушаемые объекты при попадании                          | 💥 Destructible targets on bullet impact |
-| 🗺️ Мини-карта с маркерами                                    | 🗺️ Minimap with object markers |
-| 🗿 Сбор коллекционных предметов                               | 🗿 Collectible statues |
-| 👥 Анимированные NPC с перемещением между точками             | 👥 Animated NPCs with patrol movement |
+| 🔫 Анимация оружия                                            | 🔫 Frame-accurate weapon animations          |
+| 🦘 Двойной прыжок для динамичного геймплея                    | 🦘 Double jump for dynamic movement          |
+| 💥 Разрушаемые объекты при попадании                          | 💥 Destructible targets on bullet impact     |
+| 🗺️ Мини-карта с маркерами                                    | 🗺️ Minimap with object markers              |
+| 🗿 Сбор коллекционных предметов                               | 🗿 Collectible items                         |
+| 👥 Анимированные NPC с перемещением между точками             | 👥 Animated NPCs with patrol movement        |
 | 🎨 Автоматическая настройка коллайдеров под каждый тип объекта | 🎨 Auto-configured colliders per object type |
 
 ---
