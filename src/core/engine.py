@@ -6,29 +6,32 @@ from src.shaders.comics_shader import comics_shaders
 
 
 def init_engine():
+    """Инициализация игрового движка и базовой сцены. | Initialize game engine and base scene."""
     app = Ursina(
         title=WINDOW_TITLE,
         borderless=WINDOW_BORDERLESS,
         vsync=WINDOW_VSYNC,
         asset_folder=ASSETS_DIR
     )
-    getModelPath().append_directory(str(MODELS_DIR))
+    getModelPath().append_directory(str(MODELS_DIR))   # Путь к моделям для загрузчика Panda3D | Add models path for Panda3D loader
 
-    window.show_colliders = SHOW_COLLIDERS
-    window.cursor_hidden = True
+    window.show_colliders = SHOW_COLLIDERS             # Отладка: отображение коллайдеров | Debug: show colliders
+    window.cursor_hidden = True                        # Скрыть курсор мыши | Hide mouse cursor
 
-    Sky(texture=SKY_TEXTURE)
-    sun = DirectionalLight(shadows=True, color=DIRECTIONAL_LIGHT_COLOR)
-    sun.look_at(DIRECTIONAL_LIGHT_DIRECTION)
-    AmbientLight(color=AMBIENT_LIGHT_COLOR)
+    # === Окружение | Environment ===
+    Sky(texture=SKY_TEXTURE)                           # Текстура неба | Sky texture
+    sun = DirectionalLight(shadows=True, color=DIRECTIONAL_LIGHT_COLOR)  # Направленный свет с тенями | Directional light with shadows
+    sun.look_at(DIRECTIONAL_LIGHT_DIRECTION)           # Ориентация солнца | Sun direction
+    AmbientLight(color=AMBIENT_LIGHT_COLOR)            # Фоновое освещение для заполнения теней | Ambient light to fill shadows
 
+    # === Игровая площадка | Ground plane ===
     ground = Entity(
         model='plane',
         scale=GROUND_SCALE,
         texture=GRASS_TEXTURE,
-        texture_scale=(40, 40),
-        collider='box',
-        shader=comics_shaders,
+        texture_scale=(40, 40),                        # Повторение текстуры для естественного вида | Texture tiling for natural look
+        collider='box',                                # Коллайдер для земли | Ground collider
+        shader=comics_shaders,                         # Кастомный шейдер для стилизации | Custom shader
         color=color.green.tint(-0.1)
     )
 

@@ -1,77 +1,75 @@
 from ursina import Vec3, color
 from pathlib import Path
 
-# ================ Пути ================
-BASE_DIR = Path(__file__).parent.parent.parent
-ASSETS_DIR = Path(__file__).parent.parent / 'assets'
-MODELS_DIR = ASSETS_DIR / 'models'
-AUDIO_DIR = ASSETS_DIR / 'audio'
+# ================ Пути | Paths ================
+BASE_DIR = Path(__file__).parent.parent.parent          # Корневая директория проекта | Project root directory
+ASSETS_DIR = Path(__file__).parent.parent / 'assets'    # Директория с игровыми ресурсами | Game assets directory
+MODELS_DIR = ASSETS_DIR / 'models'                      # Директория 3D-моделей | 3D models directory
+AUDIO_DIR = ASSETS_DIR / 'audio'                        # Директория аудиофайлов | Audio files directory
 
-# ================ Игровые параметры ================
-GROUND_SCALE = 100
+# ================ Игровые параметры | Game Parameters ================
+GROUND_SCALE = 100                                      # Размер игрового поля | Game field size
 MAP_HALF_SIZE = int(GROUND_SCALE // 2)
-PLAYER_SPEED = 8
-PLAYER_JUMP_HEIGHT = 2.0
-PLAYER_SECOND_JUMP_HEIGHT = 3.0
-PLAYER_GRAVITY = 1
+PLAYER_SPEED = 8                                        # Базовая скорость игрока | Player base speed
+PLAYER_JUMP_HEIGHT = 2.0                                # Высота прыжка | Height of the jump
+PLAYER_SECOND_JUMP_HEIGHT = 3.0                         # Высота второго прыжка | Height of the second jump
+PLAYER_GRAVITY = 1                                      # Гравитации | Gravity
 PLAYER_MOUSE_SENSITIVITY = (40, 40)
 
-# ================ Оружие ================
-GLOCK_WEAPON_MODEL = 'weapon_Glock.glb'
-GLOCK_WEAPON_SCALE = 0.8
-GLOCK_MAGAZINE_SIZE = 5
-ANIM_FPS = 60
-FIRE_ANIM_START_FRAME = 86
-FIRE_ANIM_END_FRAME = 105
-RELOAD_ANIM_START_FRAME = 106
-RELOAD_ANIM_END_FRAME = 150
-SOUND_GLOCK_FIRE = 'Glock_fire'
-SOUND_GLOCK_RELOAD = 'Glock_reload'
-RELOAD_PITCH = 0.62
+# ================ Оружие | Weapon ================
+GLOCK_WEAPON_MODEL = 'weapon_Glock.glb'                 # Имя файла 3D-модели | 3D model filename
+GLOCK_WEAPON_SCALE = 0.8                                # Масштаб модели оружия от первого лица | First-person weapon model scale
+GLOCK_MAGAZINE_SIZE = 5                                 # Вместимость магазина | Magazine capacity
+ANIM_FPS = 60                                           # Частота кадров для анимаций оружия | Weapon animation frame rate
+FIRE_ANIM_START_FRAME = 86                              # Начальный кадр анимации стрельбы | Fire animation start frame
+FIRE_ANIM_END_FRAME = 105                               # Конечный кадр анимации стрельбы | Fire animation end frame
+RELOAD_ANIM_START_FRAME = 106                           # Начальный кадр анимации перезарядки | Reload animation start frame
+RELOAD_ANIM_END_FRAME = 150                             # Конечный кадр анимации перезарядки | Reload animation end frame
+SOUND_GLOCK_FIRE = 'Glock_fire'                         # Имя звукового файла выстрела | Fire sound filename
+SOUND_GLOCK_RELOAD = 'Glock_reload'                     # Имя звукового файла перезарядки | Reload sound filename
+RELOAD_PITCH = 0.62                                     # Замедление звука перезарядки | Reload sound pitch slowdown factor
 
-# ================ NPC ================
-NPC_SPEED_WALK = 3.0
-NPC_SPEED_RUN = 5.0
-NPC_IDLE_DISTANCE = 15
-NPC_ATTACK_DISTANCE = 10
+# ================ NPC | NPC ================
+NPC_SPEED_WALK = 3.0                                    # Скорость ходьбы NPC | NPC walking speed
+NPC_SPEED_RUN = 5.0                                     # Скорость бега NPC при преследовании | NPC running speed when chasing
+NPC_IDLE_DISTANCE = 15                                  # Дистанция активации преследования | Distance to trigger chase behavior
+NPC_ATTACK_DISTANCE = 10                                # Дистанция начала бега к игроку | Distance to start running toward player
 
-# ================ Коллайдеры ================
-COLLIDER_SHRINK_FACTOR = 0.8
-ROCK_COLLIDER_SHRINK = 0.5
-TREE_COLLIDER_SHRINK = 0.5
-COTTAGE_COLLIDER_SHRINK = 0.2
-FLASHLIGHT_COLLIDER_SHRINK = 0.2
-TARGET_COLLIDER_SHRINK = 0.3
-STATUE_COLLIDER_SHRINK = 1
+# ================ Коллайдеры | Colliders ================
+COLLIDER_SHRINK_FACTOR = 0.8                            # Базовый коэффициент уменьшения коллайдера | Base collider shrink factor
+ROCK_COLLIDER_SHRINK = 0.5                              # Уменьшение коллайдера для камней (по X/Z) | Collider shrink for rocks (X/Z axes)
+TREE_COLLIDER_SHRINK = 0.5                              # Уменьшение коллайдера для деревьев | Collider shrink for trees
+COTTAGE_COLLIDER_SHRINK = 0.2                           # Уменьшение коллайдера для домиков | Collider shrink for cottages
+FLASHLIGHT_COLLIDER_SHRINK = 0.2                        # Уменьшение коллайдера для фонариков | Collider shrink for flashlights
+TARGET_COLLIDER_SHRINK = 0.3                            # Уменьшение коллайдера для мишеней | Collider shrink for targets
+STATUE_COLLIDER_SHRINK = 1                              # Коллайдер статуи = размер модели | Statue collider matches model size
 
-# ================ Мини-карта ================
-MINIMAP_SIZE = 0.3
-MINIMAP_PLAYER_MARKER_COLOR = 'lime'
-MINIMAP_NPC_MARKER_COLOR = 'crimson'
-MINIMAP_PLAYER_MARKER_SCALE = 0.015
-MINIMAP_NPC_MARKER_SCALE = 0.012
-MINIMAP_VISIBILITY = 0.85
+# ================ Мини-карта | Minimap ================
+MINIMAP_SIZE = 0.3                                      # Размер мини-карты | Minimap size as fraction of screen height
+MINIMAP_PLAYER_MARKER_COLOR = 'lime'                    # Цвет маркера игрока | Player marker color
+MINIMAP_NPC_MARKER_COLOR = 'crimson'                    # Цвет маркера NPC | NPC marker color
+MINIMAP_PLAYER_MARKER_SCALE = 0.015                     # Масштаб маркера игрока | Player marker scale
+MINIMAP_NPC_MARKER_SCALE = 0.012                        # Масштаб маркера NPC | NPC marker scale
+MINIMAP_VISIBILITY = 0.85                               # Прозрачность фона мини-карты | Minimap background transparency
 
-# ================ Ursina Engine (КРИТИЧНО ДЛЯ 60+ FPS) ================
-WINDOW_TITLE = "Game"
-WINDOW_BORDERLESS = False
-WINDOW_VSYNC = False      # ← Отключён для максимальной производительности
-SHOW_COLLIDERS = False
+# ================ Настройки Ursina | Ursina Settings ================
+WINDOW_TITLE = "Game"                                   # Заголовок игрового окна | Game window title
+WINDOW_BORDERLESS = False                               # Безрамочное окно (False = обычное окно) | Borderless window (False = standard window)
+WINDOW_VSYNC = False                                    # Вертикальная синхронизация (отключена для производительности) | Vertical sync (disabled for performance)
+SHOW_COLLIDERS = False                                  # Отображение отладочных коллайдеров | Show debug colliders
 
-# ================ Цвета в стиле комикса ================
-BORDERLANDS_SKY_COLOR = color.rgba(210, 240, 255, 255)  # Ярко-голубой с розовым оттенком
-GRASS_COLOR = color.rgb(100, 180, 100)    # Зелёный
-ROCK_COLOR = color.rgb(230, 110, 80)    # Оранжево-коричневый
-TREE_COLOR = color.rgb(40, 250, 100)    # Кислотно-зелёный
-COTTAGE_COLOR = color.rgb(250, 130, 70) # Ярко-оранжевый
-FLASHLIGHT_COLOR = color.rgb(255, 255, 100)  # Солнечный жёлтый
-STATUE_COLOR = color.rgb(150, 150, 255) # Лавандовый
-TARGET_COLOR = color.rgb(255, 70, 70)   # Кроваво-красный
+# ================ Цвета объектов в стиле комикс | Comic-Style Object Colors ================
+ROCK_COLOR = color.rgb(230, 110, 80)
+TREE_COLOR = color.rgb(40, 250, 100)
+COTTAGE_COLOR = color.rgb(250, 130, 70)
+FLASHLIGHT_COLOR = color.rgb(255, 255, 100)
+STATUE_COLOR = color.rgb(150, 150, 255)
+TARGET_COLOR = color.rgb(255, 70, 70)
 
-# ================ Окружение (БЕЗ БЛИКОВ!) ================
-SKY_TEXTURE = 'sky_sunset'
-GRASS_TEXTURE = 'grass'
-DIRECTIONAL_LIGHT_DIRECTION = Vec3(1, -1, -1)
-AMBIENT_LIGHT_COLOR = color.rgb(90, 70, 140)   # Фиолетовый для глубины
-DIRECTIONAL_LIGHT_COLOR = color.rgb(240, 230, 200)  # Слегка приглушённый солнечный свет (не белый!)
-SPECULAR_FACTOR = 0.0  # ← Ключевой параметр: отключаем блики
+# ================ Освещение и окружение | Lighting and Environment ================
+SKY_TEXTURE = 'sky_sunset'                              # Имя текстуры неба | Sky texture name
+GRASS_TEXTURE = 'grass'                                 # Имя текстуры травы | Grass texture name
+DIRECTIONAL_LIGHT_DIRECTION = Vec3(1, -1, -1)           # Направление основного света | Direction of main light source
+AMBIENT_LIGHT_COLOR = color.rgb(90, 70, 140)            # Цвет фонового освещения | Ambient light color
+DIRECTIONAL_LIGHT_COLOR = color.rgb(240, 230, 200)      # Цвет направленного света | Directional light color
+SPECULAR_FACTOR = 0.0                                   # Отключение спекулярных бликов | Disable specular highlights

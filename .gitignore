@@ -10,3 +10,4 @@ collect_pycode.py
 /src/assets/future_models/
 /src/assets/future_textures/
 tests/
+/features/

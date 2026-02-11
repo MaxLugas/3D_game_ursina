@@ -1,6 +1,7 @@
 import sys
 from pathlib import Path
 
+# Добавляем корневую директорию в PYTHONPATH для абсолютных импортов | Add root dir to PYTHONPATH for absolute imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.core.engine import init_engine
@@ -20,8 +21,11 @@ minimap = None
 weapon=None
 
 def main():
+    """Главная функция инициализации игры. | Main game initialization function."""
     global game_logic, player, minimap, weapon
     app = init_engine()
+
+    # Создание игрока с параметрами из конфига | Create player with config parameters
     player = create_player(
         speed=PLAYER_SPEED,
         second_jump_height=PLAYER_SECOND_JUMP_HEIGHT,
@@ -29,9 +33,14 @@ def main():
         mouse_sensitivity=PLAYER_MOUSE_SENSITIVITY,
         position=(0, 1, 0)
     )
+
+    # Инициализация оружия от первого лица | Initialize first-person weapon
     weapon = FPSWeapon(model_path=GLOCK_WEAPON_MODEL, scale=GLOCK_WEAPON_SCALE)
+
+    # Загрузка карты из JSON и создание объектов мира | Load map from JSON and create world objects
     world_entities, statue_triggers_list = load_map('map.json')
 
+    # Создание NPC | Create NPC
     npcs = [
         AnimatedNPC(
             start_pos=(3, 0, 0),
@@ -42,6 +51,7 @@ def main():
         )
     ]
 
+    # Инициализация игровой логики | Initialize game logic
     game_logic = GameLogic(
         player=player,
         npcs=npcs,
@@ -49,7 +59,7 @@ def main():
         world_entities=world_entities
     )
 
-    # === Мини-карта ===
+    # Создание мини-карты | Create minimap
     minimap = Minimap(
         player=player,
         world_entities=world_entities,
@@ -61,6 +71,7 @@ def main():
 
 
 def update():
+    """Обновление состояния игры каждый кадр | Update game state each frame"""
     if game_logic is not None:
         game_logic.update()
     if weapon is not None:
@@ -73,6 +84,7 @@ def update():
 
 
 def input(key):
+    """Обработка пользовательского ввода (клавиши) | Handle user input (keys)"""
     global player, game_logic, minimap
     if key == 'e' and game_logic is not None:
         hit_info = raycast(
@@ -81,9 +93,12 @@ def input(key):
             distance=6,
             ignore=(player,)
         )
+
+        # Проверка попадания в триггер статуи | Check hit on statue trigger
         if hit_info.hit and hit_info.entity in game_logic.statue_triggers:
             game_logic.remove_statue(hit_info.entity)
 
+            # Визуальная обратная связь | Visual feedback
             msg = Text(
                 text='Статуя подобрана!',
                 origin=(0, 0),
