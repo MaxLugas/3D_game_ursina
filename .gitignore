@@ -1,0 +1,13 @@
+venv/
+__pycache__/
+*.pyc
+*.bam
+*.log
+.DS_Store
+.idea/
+all_code.txt
+collect_pycode.py
+/src/assets/future_models/
+/src/assets/future_textures/
+/tests/
+/features/
