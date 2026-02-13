@@ -1,4 +1,6 @@
 from ursina import Shader
+from panda3d.core import Shader as Panda3DShader
+
 
 comics_shaders = Shader(name='comics_shaders', language=Shader.GLSL,
                         vertex='''
@@ -71,3 +73,107 @@ comics_shaders = Shader(name='comics_shaders', language=Shader.GLSL,
         fragColor = vec4(color, base.a);  // Финальный цвет с прозрачностью | Final color with alpha
     }
     ''')
+
+npc_shader_panda = Panda3DShader.make(
+    Panda3DShader.SL_GLSL,
+    vertex='''
+        #version 140
+        uniform mat4 p3d_ModelViewProjectionMatrix;
+        uniform mat4 p3d_ModelMatrix;
+        uniform mat4 p3d_NormalMatrix;
+        in vec4 p3d_Vertex;
+        in vec3 p3d_Normal;
+        in vec2 p3d_MultiTexCoord0;
+        out vec2 texcoord;
+        out vec3 world_normal;
+        out vec3 world_pos;
+        void main() {
+            gl_Position = p3d_ModelViewProjectionMatrix * p3d_Vertex;
+            texcoord = p3d_MultiTexCoord0;
+            world_pos = (p3d_ModelMatrix * p3d_Vertex).xyz;
+            world_normal = normalize(mat3(p3d_NormalMatrix) * p3d_Normal);
+        }
+    ''',
+    fragment='''
+        #version 140
+        uniform sampler2D p3d_Texture0;
+        uniform vec4 p3d_ColorScale;
+        in vec2 texcoord;
+        in vec3 world_normal;
+        in vec3 world_pos;
+        out vec4 fragColor;
+        void main() {
+            vec4 base = texture(p3d_Texture0, texcoord) * p3d_ColorScale;
+
+            // === МАКСИМАЛЬНАЯ НАСЫЩЕННОСТЬ (+150%) ===
+            vec3 intensity = vec3(dot(base.rgb, vec3(0.299, 0.587, 0.114)));
+            vec3 saturated = mix(intensity, base.rgb, 2.5);  // +150% saturation
+
+            // === ЭКСТРЕМАЛЬНЫЙ КОНТРАСТ (+80%) ===
+            vec3 color = (saturated - 0.5) * 1.8 + 0.53;  // +0.03 яркости
+
+            // === ЧЁРНЫЕ КОНТУРЫ ЧЕРЕЗ НОРМАЛИ (стиль комиксов) ===
+            vec3 view_dir = normalize(vec3(0.0, 0.0, 1.0));  // упрощённое направление камеры
+            float ndotv = abs(dot(normalize(world_normal), view_dir));
+            float edge = 1.0 - ndotv;
+            edge = smoothstep(0.75, 0.98, edge);  // резкие чёрные линии на краях
+
+            // Применяем контуры: смешиваем с чёрным по краям
+            color = mix(vec3(0.0), color, 1.0 - edge * 0.95);
+
+            // === ФИНАЛЬНАЯ ЗАЩИТА ===
+            color = clamp(color, 0.0, 1.0);
+
+            fragColor = vec4(color, base.a);
+        }
+    '''
+)
+
+from panda3d.core import Shader as Panda3DShader
+
+weapon_shader_panda = Panda3DShader.make(
+    Panda3DShader.SL_GLSL,
+    vertex='''
+        #version 140
+        uniform mat4 p3d_ModelViewProjectionMatrix;
+        uniform mat4 p3d_ModelMatrix;
+        uniform mat4 p3d_NormalMatrix;
+        in vec4 p3d_Vertex;
+        in vec3 p3d_Normal;
+        in vec2 p3d_MultiTexCoord0;
+        out vec2 texcoord;
+        out vec3 world_normal;
+        void main() {
+            gl_Position = p3d_ModelViewProjectionMatrix * p3d_Vertex;
+            texcoord = p3d_MultiTexCoord0;
+            world_normal = normalize(mat3(p3d_NormalMatrix) * p3d_Normal);
+        }
+    ''',
+    fragment='''
+        #version 140
+        uniform sampler2D p3d_Texture0;
+        uniform vec4 p3d_ColorScale;
+        in vec2 texcoord;
+        in vec3 world_normal;
+        out vec4 fragColor;
+        void main() {
+            vec4 base = texture(p3d_Texture0, texcoord) * p3d_ColorScale;
+
+            // === ЧИСТАЯ НАСЫЩЕННОСТЬ БЕЗ ИСКАЖЕНИЯ ЦВЕТОВ ===
+            // Сохраняет оригинальный цвет, только усиливает его
+            vec3 gray = vec3(dot(base.rgb, vec3(0.299, 0.587, 0.114)));
+            vec3 color = gray + (base.rgb - gray) * 2.5;  // +150% saturation
+
+            // === ЧЁРНЫЕ КОНТУРЫ ЧЕРЕЗ НОРМАЛИ ===
+            vec3 view_dir = normalize(vec3(0.0, 0.0, 1.0));
+            float edge = 1.0 - abs(dot(normalize(world_normal), view_dir));
+            edge = smoothstep(0.8, 0.98, edge);
+            color = mix(vec3(0.0), color, 1.0 - edge);
+
+            // === ФИНАЛЬНАЯ ЗАЩИТА ===
+            color = clamp(color, 0.0, 1.0);
+
+            fragColor = vec4(color, base.a);
+        }
+    '''
+)
