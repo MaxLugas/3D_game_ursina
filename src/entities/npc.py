@@ -3,8 +3,7 @@ from direct.actor.Actor import Actor
 from math import atan2, degrees
 from src.utils.object_setup import setup_collidable_object
 from src.core.config import COLLIDER_SHRINK_FACTOR, NPC_SPEED_WALK, MODELS_DIR, NPC_IDLE_DISTANCE
-from src.shaders.comics_shader import comics_shaders
-
+from src.shaders.comics_shader import  npc_shader_panda
 
 class AnimatedNPC:
     def __init__(self, start_pos, end_pos, player, speed=NPC_SPEED_WALK, model_path=f'{MODELS_DIR}/Droid.glb',
@@ -27,7 +26,7 @@ class AnimatedNPC:
         self.actor.reparent_to(scene)
         self.actor.set_scale(self._scale)
         self.actor.set_light_off()                             # Отключаем динамическое освещение | Disable dynamic lighting
-        self.actor.set_shader(comics_shaders._shader)
+        self.actor.set_shader(npc_shader_panda)
 
         if fix_orientation:
             self.actor.set_p(0)
