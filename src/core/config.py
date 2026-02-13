@@ -41,7 +41,7 @@ ROCK_COLLIDER_SHRINK = 0.5                              # Уменьшение �
 TREE_COLLIDER_SHRINK = 0.5                              # Уменьшение коллайдера для деревьев | Collider shrink for trees
 COTTAGE_COLLIDER_SHRINK = 0.2                           # Уменьшение коллайдера для домиков | Collider shrink for cottages
 FLASHLIGHT_COLLIDER_SHRINK = 0.2                        # Уменьшение коллайдера для фонариков | Collider shrink for flashlights
-TARGET_COLLIDER_SHRINK = 0.3                            # Уменьшение коллайдера для мишеней | Collider shrink for targets
+TARGET_COLLIDER_SHRINK = 1                              # Уменьшение коллайдера для мишеней | Collider shrink for targets
 STATUE_COLLIDER_SHRINK = 1                              # Коллайдер статуи = размер модели | Statue collider matches model size
 
 # ================ Мини-карта | Minimap ================
@@ -56,7 +56,7 @@ MINIMAP_VISIBILITY = 0.85                               # Прозрачност
 WINDOW_TITLE = "Game"                                   # Заголовок игрового окна | Game window title
 WINDOW_BORDERLESS = False                               # Безрамочное окно (False = обычное окно) | Borderless window (False = standard window)
 WINDOW_VSYNC = False                                    # Вертикальная синхронизация (отключена для производительности) | Vertical sync (disabled for performance)
-SHOW_COLLIDERS = False                                  # Отображение отладочных коллайдеров | Show debug colliders
+SHOW_COLLIDERS = True                                  # Отображение отладочных коллайдеров | Show debug colliders
 
 # ================ Цвета объектов в стиле комикс | Comic-Style Object Colors ================
 ROCK_COLOR = color.rgb(230, 110, 80)
