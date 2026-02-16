@@ -118,8 +118,7 @@ project/
 │   ├── systems/              # Игровые системы | Game systems
 │   │   ├── game_logic.py     # Границы, падение, взаимодействия | Boundaries, fall reset, interactions
 │   │   ├── map_loader.py     # Загрузка карты из JSON | JSON map loader
-│   │   ├── minimap.py        # Система мини-карты | Minimap system
-│   │   └── outline_system.py # Чёрные контуры | Black outlines system
+│   │   └──  minimap.py        # Система мини-карты | Minimap system  
 │   └── utils/                # Вспомогательные утилиты | Utilities
 │       └── object_setup.py   # Настройка коллайдеров | Collider setup
 ├── tests/                    # Тесты отдельных систем | System tests
