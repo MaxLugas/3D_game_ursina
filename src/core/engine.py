@@ -2,7 +2,7 @@ from panda3d.core import getModelPath
 from ursina import *
 from src.core.config import GROUND_SCALE, WINDOW_TITLE, WINDOW_BORDERLESS, WINDOW_VSYNC, SHOW_COLLIDERS, ASSETS_DIR, \
     DIRECTIONAL_LIGHT_DIRECTION, SKY_TEXTURE, AMBIENT_LIGHT_COLOR, DIRECTIONAL_LIGHT_COLOR, GRASS_TEXTURE, MODELS_DIR
-from src.shaders.comics_shader import comics_shaders
+from src.shaders.comics_shader import comics_shaders, ground_shader_panda
 
 
 def init_engine():
@@ -31,7 +31,7 @@ def init_engine():
         texture=GRASS_TEXTURE,
         texture_scale=(40, 40),                        # Повторение текстуры для естественного вида | Texture tiling for natural look
         collider='box',                                # Коллайдер для земли | Ground collider
-        shader=comics_shaders,                         # Кастомный шейдер для стилизации | Custom shader
+        shader=ground_shader_panda,                         # Кастомный шейдер для стилизации | Custom shader
         color=color.green.tint(-0.1)
     )
 
