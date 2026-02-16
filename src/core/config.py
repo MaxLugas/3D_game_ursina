@@ -35,6 +35,13 @@ NPC_SPEED_RUN = 5.0                                     # Скорость бе�
 NPC_IDLE_DISTANCE = 15                                  # Дистанция активации преследования | Distance to trigger chase behavior
 NPC_ATTACK_DISTANCE = 10                                # Дистанция начала бега к игроку | Distance to start running toward player
 
+# Анимации NPC | NPC animations
+NPC_IDLE_ANIM = 'Idle'                                  # Анимация бездействия | Idle animation
+NPC_WALK_ANIM = 'Walking'                               # Анимация ходьбы | Walking animation
+NPC_RUN_ANIM = 'Running'                                # Анимация бега | Running animation
+NPC_SKILL_ANIM = 'Skill_01'                             # Анимация навыка/атаки | Skill/attack animation
+NPC_SCALE = 2.0                                         # Масштаб NPC | NPC scale
+
 # ================ Коллайдеры | Colliders ================
 COLLIDER_SHRINK_FACTOR = 0.8                            # Базовый коэффициент уменьшения коллайдера | Base collider shrink factor
 ROCK_COLLIDER_SHRINK = 0.5                              # Уменьшение коллайдера для камней (по X/Z) | Collider shrink for rocks (X/Z axes)
@@ -56,7 +63,7 @@ MINIMAP_VISIBILITY = 0.85                               # Прозрачност
 WINDOW_TITLE = "Game"                                   # Заголовок игрового окна | Game window title
 WINDOW_BORDERLESS = False                               # Безрамочное окно (False = обычное окно) | Borderless window (False = standard window)
 WINDOW_VSYNC = False                                    # Вертикальная синхронизация (отключена для производительности) | Vertical sync (disabled for performance)
-SHOW_COLLIDERS = True                                  # Отображение отладочных коллайдеров | Show debug colliders
+SHOW_COLLIDERS = True                                   # Отображение отладочных коллайдеров | Show debug colliders
 
 # ================ Цвета объектов в стиле комикс | Comic-Style Object Colors ================
 ROCK_COLOR = color.rgb(230, 110, 80)

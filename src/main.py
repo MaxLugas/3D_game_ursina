@@ -8,17 +8,16 @@ from src.core.engine import init_engine
 from src.systems.map_loader import load_map
 from src.systems.game_logic import GameLogic
 from src.entities.player import create_player
-from src.entities.npc import AnimatedNPC
 from ursina import *
 from src.systems.minimap import Minimap
 from src.entities.weapon import FPSWeapon
 from src.core.config import PLAYER_SPEED, PLAYER_SECOND_JUMP_HEIGHT, MAP_HALF_SIZE, PLAYER_GRAVITY, \
-    PLAYER_MOUSE_SENSITIVITY, NPC_SPEED_WALK, GLOCK_WEAPON_MODEL, GLOCK_WEAPON_SCALE
+    PLAYER_MOUSE_SENSITIVITY, GLOCK_WEAPON_MODEL, GLOCK_WEAPON_SCALE
 
 game_logic = None
 player = None
 minimap = None
-weapon=None
+weapon = None
 
 def main():
     """Главная функция инициализации игры. | Main game initialization function."""
@@ -38,25 +37,13 @@ def main():
     weapon = FPSWeapon(model_path=GLOCK_WEAPON_MODEL, scale=GLOCK_WEAPON_SCALE)
 
     # Загрузка карты из JSON и создание объектов мира | Load map from JSON and create world objects
-    world_entities, statue_triggers_list = load_map('map.json')
-
-    # Создание NPC | Create NPC
-    npcs = [
-        AnimatedNPC(
-            start_pos=(3, 0, 0),
-            end_pos=(15, 0, 0),
-            player=player,
-            speed=NPC_SPEED_WALK,
-            model_path='assets/models/Droid.glb',
-            walk_anim='Walking',
-            idle_anim='Idle'
-        )
-    ]
+    # Позиции NPC берутся исключительно из map.json | NPC positions are taken exclusively from map.json
+    world_entities, statue_triggers_list, npcs_from_map = load_map('map.json', player=player)
 
     # Инициализация игровой логики | Initialize game logic
     game_logic = GameLogic(
         player=player,
-        npcs=npcs,
+        npcs=npcs_from_map,  # Используем NPC из карты | Use NPCs from map
         statue_triggers=statue_triggers_list,
         world_entities=world_entities
     )
@@ -65,8 +52,8 @@ def main():
     minimap = Minimap(
         player=player,
         world_entities=world_entities,
-        npcs=npcs,
-        map_half_size= MAP_HALF_SIZE
+        npcs=npcs_from_map,  # Передаем NPC в мини-карту | Pass NPCs to minimap
+        map_half_size=MAP_HALF_SIZE
     )
 
     app.run()
