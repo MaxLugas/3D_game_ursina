@@ -12,7 +12,7 @@ from src.core.config import (
     SOUND_GLOCK_RELOAD,
     RELOAD_PITCH, MODELS_DIR
 )
-from src.shaders.comics_shader import comics_shaders
+from src.shaders.comics_shader import weapon_shader_panda
 
 class FPSWeapon:
     def __init__(self, model_path=MODELS_DIR/GLOCK_WEAPON_MODEL, scale=GLOCK_WEAPON_SCALE):
@@ -26,9 +26,8 @@ class FPSWeapon:
         self.actor.reparent_to(self.holder)
         self.actor.set_scale(scale)
         self.actor.set_light_off(True)
+        self.actor.set_shader(weapon_shader_panda)        # Применяем кастомный шейдер | Apply custom shader
 
-        # Применяем кастомный шейдер | Apply custom shader
-        self.actor.set_shader(comics_shaders._shader)
 
         # Сопоставление логических имён с реальными именами в модели | Map logical animation names to actual names
         self.anim_names = {

@@ -45,9 +45,11 @@ def main():
         AnimatedNPC(
             start_pos=(3, 0, 0),
             end_pos=(15, 0, 0),
+            player=player,
             speed=NPC_SPEED_WALK,
             model_path='assets/models/Droid.glb',
-            anim_name='Walking'
+            walk_anim='Walking',
+            idle_anim='Idle'
         )
     ]
 
