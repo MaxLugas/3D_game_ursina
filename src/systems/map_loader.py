@@ -183,7 +183,7 @@ def load_map(filename='map.json', player=None):
                     npc = AnimatedNPC(
                         start_pos=(x, y, z),
                         player=player,
-                        model_path=f'{MODELS_DIR}/Droid.glb',
+                        model_path=f'{MODELS_DIR}/droid.glb',
                         idle_anim=NPC_IDLE_ANIM,
                         walk_anim=NPC_WALK_ANIM,
                         run_anim=NPC_RUN_ANIM,
