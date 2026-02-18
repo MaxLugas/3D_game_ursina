@@ -8,55 +8,44 @@ from src.core.engine import init_engine
 from src.systems.map_loader import load_map
 from src.systems.game_logic import GameLogic
 from src.entities.player import create_player
-from src.entities.npc import AnimatedNPC
 from ursina import *
 from src.systems.minimap import Minimap
 from src.entities.weapon import FPSWeapon
 from src.core.config import PLAYER_SPEED, PLAYER_SECOND_JUMP_HEIGHT, MAP_HALF_SIZE, PLAYER_GRAVITY, \
-    PLAYER_MOUSE_SENSITIVITY, NPC_SPEED_WALK, GLOCK_WEAPON_MODEL, GLOCK_WEAPON_SCALE
+    PLAYER_MOUSE_SENSITIVITY, GLOCK_WEAPON_MODEL, GLOCK_WEAPON_SCALE
 
 game_logic = None
 player = None
 minimap = None
-weapon=None
+weapon = None
 
 def main():
     """Главная функция инициализации игры. | Main game initialization function."""
     global game_logic, player, minimap, weapon
     app = init_engine()
 
-    # Создание игрока с параметрами из конфига | Create player with config parameters
+    # Загрузка карты из JSON и создание объектов мира | Load map from JSON and create world objects | Теперь получаем также player_start
+    world_entities, statue_triggers_list, npcs_from_map, player_start = load_map('map.json', player=None)
+
     player = create_player(
         speed=PLAYER_SPEED,
         second_jump_height=PLAYER_SECOND_JUMP_HEIGHT,
         gravity=PLAYER_GRAVITY,
         mouse_sensitivity=PLAYER_MOUSE_SENSITIVITY,
-        position=(0, 1, 0)
+        position=(player_start['x'], player_start['y'], player_start['z']),
+        rotation_y=player_start.get('rot', 0)
     )
 
     # Инициализация оружия от первого лица | Initialize first-person weapon
     weapon = FPSWeapon(model_path=GLOCK_WEAPON_MODEL, scale=GLOCK_WEAPON_SCALE)
 
-    # Загрузка карты из JSON и создание объектов мира | Load map from JSON and create world objects
-    world_entities, statue_triggers_list = load_map('map.json')
-
-    # Создание NPC | Create NPC
-    npcs = [
-        AnimatedNPC(
-            start_pos=(3, 0, 0),
-            end_pos=(15, 0, 0),
-            player=player,
-            speed=NPC_SPEED_WALK,
-            model_path='assets/models/Droid.glb',
-            walk_anim='Walking',
-            idle_anim='Idle'
-        )
-    ]
+    # Перезагружаем карту с созданным игроком для NPC | Reload map with created player for NPCs
+    world_entities, statue_triggers_list, npcs_from_map, _ = load_map('map.json', player=player)
 
     # Инициализация игровой логики | Initialize game logic
     game_logic = GameLogic(
         player=player,
-        npcs=npcs,
+        npcs=npcs_from_map,
         statue_triggers=statue_triggers_list,
         world_entities=world_entities
     )
@@ -65,8 +54,8 @@ def main():
     minimap = Minimap(
         player=player,
         world_entities=world_entities,
-        npcs=npcs,
-        map_half_size= MAP_HALF_SIZE
+        npcs=npcs_from_map,
+        map_half_size=MAP_HALF_SIZE
     )
 
     app.run()
