@@ -24,26 +24,31 @@ def main():
     global game_logic, player, minimap, weapon
     app = init_engine()
 
-    # Создание игрока с параметрами из конфига | Create player with config parameters
+    # Загрузка карты из JSON и создание объектов мира | Load map from JSON and create world objects | Теперь получаем также player_start
+    world_entities, statue_triggers_list, npcs_from_map, player_start = load_map('map.json', player=None)
+
+    # Создание игрока с параметрами из конфига и загруженной стартовой позицией | Create player with config parameters and loaded start position
     player = create_player(
         speed=PLAYER_SPEED,
         second_jump_height=PLAYER_SECOND_JUMP_HEIGHT,
         gravity=PLAYER_GRAVITY,
         mouse_sensitivity=PLAYER_MOUSE_SENSITIVITY,
-        position=(0, 1, 0)
+        position=(player_start['x'], player_start['y'], player_start['z'])
     )
+
+    print(
+        f"🚩 Игрок размещен в позиции ({player_start['x']:.1f}, {player_start['y']:.1f}, {player_start['z']:.1f}) | Player placed at position")
 
     # Инициализация оружия от первого лица | Initialize first-person weapon
     weapon = FPSWeapon(model_path=GLOCK_WEAPON_MODEL, scale=GLOCK_WEAPON_SCALE)
 
-    # Загрузка карты из JSON и создание объектов мира | Load map from JSON and create world objects
-    # Позиции NPC берутся исключительно из map.json | NPC positions are taken exclusively from map.json
-    world_entities, statue_triggers_list, npcs_from_map = load_map('map.json', player=player)
+    # Перезагружаем карту с созданным игроком для NPC | Reload map with created player for NPCs
+    world_entities, statue_triggers_list, npcs_from_map, _ = load_map('map.json', player=player)
 
     # Инициализация игровой логики | Initialize game logic
     game_logic = GameLogic(
         player=player,
-        npcs=npcs_from_map,  # Используем NPC из карты | Use NPCs from map
+        npcs=npcs_from_map,
         statue_triggers=statue_triggers_list,
         world_entities=world_entities
     )
@@ -52,7 +57,7 @@ def main():
     minimap = Minimap(
         player=player,
         world_entities=world_entities,
-        npcs=npcs_from_map,  # Передаем NPC в мини-карту | Pass NPCs to minimap
+        npcs=npcs_from_map,
         map_half_size=MAP_HALF_SIZE
     )
 

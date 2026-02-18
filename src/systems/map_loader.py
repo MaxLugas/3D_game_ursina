@@ -17,9 +17,22 @@ statue_triggers = []
 
 
 def load_map(filename='map.json', player=None):
+    """
+    Загрузка карты из JSON файла
+    Load map from JSON file
+
+    Параметры | Parameters:
+        filename (str): имя файла карты | map filename
+        player (Entity): ссылка на игрока (для NPC) | reference to player (for NPCs)
+
+    Возвращает | Returns:
+        tuple: (world_entities, statue_triggers, npcs, player_start) - списки объектов, триггеров, NPC и стартовая позиция игрока
+    """
     world_entities = []  # Список всех созданных игровых объектов | List of all created game entities
     statue_triggers = []  # Локальный список триггеров для статуй | Local list of statue triggers
-    npcs = []
+    npcs = []  # Список созданных NPC | List of created NPCs
+    player_start = {'x': 0, 'z': 0, 'y': 1.0}  # Стартовая позиция по умолчанию | Default player start position
+
     filepath = ASSETS_DIR / filename
 
     # === Загрузка JSON-карты | JSON Map Loading ===
@@ -27,9 +40,23 @@ def load_map(filename='map.json', player=None):
         with open(filepath, 'r', encoding='utf-8') as f:
             data = json.load(f)
     except FileNotFoundError:
-        return world_entities, statue_triggers, npcs
+        print(
+            f"❌ Файл {filepath} не найден. Используются настройки по умолчанию. | File {filepath} not found. Using default settings.")
+        return world_entities, statue_triggers, npcs, player_start
     except json.JSONDecodeError as e:
-        return world_entities, statue_triggers, npcs
+        print(f"❌ Ошибка парсинга JSON: {e} | JSON parsing error: {e}")
+        return world_entities, statue_triggers, npcs, player_start
+
+    # === Загрузка стартовой позиции игрока | Load player start position ===
+    player_start_data = data.get("player_start", {})
+    if player_start_data:
+        player_start = {
+            'x': float(player_start_data.get('x', 0)),
+            'z': float(player_start_data.get('z', 0)),
+            'y': float(player_start_data.get('y', 1.0))
+        }
+        print(
+            f"🚩 Загружена стартовая позиция игрока: ({player_start['x']:.1f}, {player_start['y']:.1f}, {player_start['z']:.1f}) | Player start position loaded")
 
     # === Масштабирование координат | Scale coordinates ===
     base_map_size = data.get("metadata", {}).get("size", 100)
@@ -49,6 +76,9 @@ def load_map(filename='map.json', player=None):
         z = float(obj.get("z", 0)) * scale_factor
         y = float(obj.get("y", 3.0))
 
+        # === НОВОЕ: Загрузка поворота | Load rotation ===
+        rot = float(obj.get("rot", 0))
+
         # Прижатие к границам | Clamp to boundaries
         x_clamped = clamp(x, -map_half + 2.0, map_half - 2.0)
         z_clamped = clamp(z, -map_half + 2.0, map_half - 2.0)
@@ -64,8 +94,9 @@ def load_map(filename='map.json', player=None):
             entity = Entity(
                 model='rock',
                 texture='rock',
-                scale=2,                          # Применяем масштаб из карты | Apply scale from map
+                scale=2,
                 position=(x, y, z),
+                rotation=(0, rot, 0),  # Добавлен поворот по Y
                 shader=comics_shaders,
                 color=ROCK_COLOR,
                 enabled=False
@@ -80,6 +111,7 @@ def load_map(filename='map.json', player=None):
                 model='target',
                 texture='target',
                 position=(x, y, z),
+                rotation=(0, rot, 0),  # Добавлен поворот по Y
                 shader=comics_shaders,
                 color=TARGET_COLOR,
                 enabled=False
@@ -95,6 +127,7 @@ def load_map(filename='map.json', player=None):
                 texture='tree',
                 scale=2,
                 position=(x, y, z),
+                rotation=(0, rot, 0),  # Добавлен поворот по Y
                 shader=comics_shaders,
                 color=TREE_COLOR,
                 enabled=False
@@ -110,6 +143,7 @@ def load_map(filename='map.json', player=None):
                 texture='cottage',
                 scale=5,
                 position=(x, y, z),
+                rotation=(0, rot, 0),  # Добавлен поворот по Y
                 shader=comics_shaders,
                 color=COTTAGE_COLOR,
                 enabled=False
@@ -125,6 +159,7 @@ def load_map(filename='map.json', player=None):
                 texture='flashlight',
                 scale=3,
                 position=(x, y, z),
+                rotation=(0, rot, 0),  # Добавлен поворот по Y
                 shader=comics_shaders,
                 color=FLASHLIGHT_COLOR,
                 enabled=False
@@ -140,13 +175,14 @@ def load_map(filename='map.json', player=None):
                 texture='statue',
                 scale=0.5,
                 position=(x, 0.5, z),
+                rotation=(0, rot, 0),  # Добавлен поворот по Y
                 shader=comics_shaders,
                 color=STATUE_COLOR,
                 enabled=False
             )
             statue.color = statue.color.tint(0.2)
             statue.set_shader_input("specular_factor", SPECULAR_FACTOR)
-            statue.collider = None                        # Коллайдер у триггера | Collider on trigger
+            statue.collider = None
 
             trigger = Entity(
                 position=statue.position,
@@ -203,4 +239,5 @@ def load_map(filename='map.json', player=None):
 
     print(
         f"📊 Итого: {len(world_entities)} объектов, {len(statue_triggers)} триггеров, {len(npcs)} NPC | Total: {len(world_entities)} objects, {len(statue_triggers)} triggers, {len(npcs)} NPCs")
-    return world_entities, statue_triggers, npcs
+
+    return world_entities, statue_triggers, npcs, player_start
