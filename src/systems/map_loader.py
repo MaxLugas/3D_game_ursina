@@ -76,7 +76,7 @@ def load_map(filename='map.json', player=None):
         z = float(obj.get("z", 0)) * scale_factor
         y = float(obj.get("y", 3.0))
 
-        # === НОВОЕ: Загрузка поворота | Load rotation ===
+        # === Загрузка поворота | Load rotation ===
         rot = float(obj.get("rot", 0))
 
         # Прижатие к границам | Clamp to boundaries

@@ -39,19 +39,20 @@ class SimpleMapEditor:
         self.player_start = {
             'x': 0,
             'z': 0,
-            'y': 1.0
+            'y': 1.0,
+            'rot': 0  # начальное направление взгляда (в градусах) | initial view direction (in degrees)
         }
         self.show_player_start = True  # показывать маркер старта игрока | show player start marker
 
         self.current_type = 'tree'  # текущий тип объекта | current object type
         self.selected_object = None  # выделенный объект | selected object
 
-        # === НОВОЕ: Параметры поворота | Rotation parameters ===
+        # === Параметры поворота | Rotation parameters ===
         self.rotation_mode = False  # режим поворота | rotation mode
         self.rotation_amount = 0  # текущий поворот для нового объекта | current rotation for new object
         self.rotation_step = 15  # шаг поворота в градусах | rotation step in degrees
 
-        # === НОВОЕ: Для поворота с помощью мыши | For mouse rotation ===
+        # === Для поворота с помощью мыши | For mouse rotation ===
         self.rotating_object = None  # объект, который сейчас поворачиваем | object currently being rotated
         self.rotation_start_angle = 0  # начальный угол при начале поворота | starting angle when rotation begins
         self.rotation_start_mouse = (0, 0)  # начальная позиция мыши | starting mouse position
@@ -100,7 +101,7 @@ class SimpleMapEditor:
         # Прокрутка панели | Panel scrolling
         self.scroll_y = 0  # текущая позиция прокрутки | current scroll position
         self.scroll_speed = 30  # скорость прокрутки | scroll speed
-        self.panel_height_total = 1000  # общая высота содержимого панели | total panel content height
+        self.panel_height_total = 1050  # общая высота содержимого панели | total panel content height
         self.max_scroll = 0  # максимальная прокрутка | maximum scroll
 
         self.running = True
@@ -114,7 +115,8 @@ class SimpleMapEditor:
             map_screen_x = 0
 
         world_x = (map_screen_x / self.map_width - 0.5) * self.map_size
-        world_z = (screen_y / self.screen_height - 0.5) * self.map_size
+
+        world_z = -((screen_y / self.screen_height - 0.5) * self.map_size)
 
         # Привязка к сетке (если включена) | Snap to grid (if enabled)
         if self.snap_to_grid:
@@ -128,7 +130,7 @@ class SimpleMapEditor:
     def world_to_screen(self, world_x, world_z):
         """Конвертация мировых координат в экранные | Convert world coordinates to screen coordinates"""
         screen_x = (world_x / self.map_size + 0.5) * self.map_width + self.panel_width
-        screen_y = (world_z / self.map_size + 0.5) * self.screen_height
+        screen_y = (-world_z / self.map_size + 0.5) * self.screen_height
         return int(screen_x), int(screen_y)
 
     def draw_grid(self):
@@ -166,6 +168,16 @@ class SimpleMapEditor:
             # Иконка флажка | Flag icon
             text = self.font.render("🚩", True, (255, 255, 255))
             self.screen.blit(text, (screen_x - 8, screen_y - 12))
+
+            # Рисуем направление взгляда игрока | Draw player view direction
+            rot = self.player_start.get('rot', 0)
+            # Рисуем линию направления
+            end_x = screen_x + 25 * math.cos(math.radians(rot))
+            end_y = screen_y - 25 * math.sin(math.radians(rot))
+            pygame.draw.line(self.screen, (255, 255, 255), (screen_x, screen_y), (end_x, end_y), 3)
+            # Рисуем текст с углом
+            rot_text = self.small_font.render(f"{rot}°", True, (255, 255, 255))
+            self.screen.blit(rot_text, (screen_x + 30, screen_y - 20))
 
         # Рисуем обычные объекты | Draw regular objects
         for obj in self.objects:
@@ -258,7 +270,8 @@ class SimpleMapEditor:
             f"Cell: {self.cell_size:.1f}",
             f"Objects: {len(self.objects)}",
             f"NPCs: {len(self.npcs)}",
-            f"Player start: ({self.player_start['x']:.1f}, {self.player_start['z']:.1f})"
+            f"Player start: ({self.player_start['x']:.1f}, {self.player_start['z']:.1f})",
+            f"Player rot: {self.player_start.get('rot', 0)}°"
         ]
 
         for item in info_items:
@@ -523,7 +536,7 @@ class SimpleMapEditor:
                 data = json.load(f)
             self.objects = data.get("objects", [])
             self.npcs = data.get("npcs", [])
-            self.player_start = data.get("player_start", {'x': 0, 'z': 0, 'y': 1.0})
+            self.player_start = data.get("player_start", {'x': 0, 'z': 0, 'y': 1.0, 'rot': 0})
             self.show_message(f"✅ Loaded {len(self.objects)} objects, {len(self.npcs)} NPCs", 90)
         except FileNotFoundError:
             self.show_message("❌ File not found", 90)
@@ -559,11 +572,17 @@ class SimpleMapEditor:
                     self.player_start_mode = not self.player_start_mode
                     self.npc_mode = False
                     self.rotation_mode = False
+                    # Сбрасываем выделение при переключении режима
+                    self.selected_object = None
+                    self.rotating_object = None
                     self.show_message(f"Player start mode: {'ON' if self.player_start_mode else 'OFF'}", 60)
                 elif event.key == pygame.K_n:
                     self.npc_mode = not self.npc_mode
                     self.player_start_mode = False
                     self.rotation_mode = False
+                    # Сбрасываем выделение при переключении режима
+                    self.selected_object = None
+                    self.rotating_object = None
                     self.show_message(f"NPC Mode: {'ON' if self.npc_mode else 'OFF'}", 60)
                 elif event.key == pygame.K_r:
                     self.rotation_mode = not self.rotation_mode
@@ -573,29 +592,46 @@ class SimpleMapEditor:
                         current_rot = self.selected_object.get('rot', 0)
                         self.selected_object['rot'] = (current_rot - self.rotation_step) % 360
                         self.show_message(f"Rotation: {self.selected_object['rot']}°", 30)
+                    elif self.player_start_mode:
+                        # Если в режиме старта и нет выделенного объекта, поворачиваем стартовую позицию
+                        current_rot = self.player_start.get('rot', 0)
+                        self.player_start['rot'] = (current_rot - self.rotation_step) % 360
+                        self.show_message(f"Player start rotation: {self.player_start['rot']}°", 30)
                 elif event.key == pygame.K_RIGHTBRACKET:  # ] - увеличить поворот
                     if self.selected_object:
                         current_rot = self.selected_object.get('rot', 0)
                         self.selected_object['rot'] = (current_rot + self.rotation_step) % 360
                         self.show_message(f"Rotation: {self.selected_object['rot']}°", 30)
-                elif event.key == pygame.K_1 and not self.npc_mode and not self.player_start_mode:
-                    self.current_type = 'tree'
-                    self.show_message(f"Selected: tree", 30)
-                elif event.key == pygame.K_2 and not self.npc_mode and not self.player_start_mode:
-                    self.current_type = 'rock'
-                    self.show_message(f"Selected: rock", 30)
-                elif event.key == pygame.K_3 and not self.npc_mode and not self.player_start_mode:
-                    self.current_type = 'cottage'
-                    self.show_message(f"Selected: cottage", 30)
-                elif event.key == pygame.K_4 and not self.npc_mode and not self.player_start_mode:
-                    self.current_type = 'statue'
-                    self.show_message(f"Selected: statue", 30)
-                elif event.key == pygame.K_5 and not self.npc_mode and not self.player_start_mode:
-                    self.current_type = 'flashlight'
-                    self.show_message(f"Selected: flashlight", 30)
-                elif event.key == pygame.K_6 and not self.npc_mode and not self.player_start_mode:
-                    self.current_type = 'target'
-                    self.show_message(f"Selected: target", 30)
+                    elif self.player_start_mode:
+                        # Если в режиме старта и нет выделенного объекта, поворачиваем стартовую позицию
+                        current_rot = self.player_start.get('rot', 0)
+                        self.player_start['rot'] = (current_rot + self.rotation_step) % 360
+                        self.show_message(f"Player start rotation: {self.player_start['rot']}°", 30)
+                # Клавиши 1-6 для выбора объектов
+                elif event.key == pygame.K_1:
+                    if not self.npc_mode and not self.player_start_mode:
+                        self.current_type = 'tree'
+                        self.show_message(f"Selected: tree", 30)
+                elif event.key == pygame.K_2:
+                    if not self.npc_mode and not self.player_start_mode:
+                        self.current_type = 'rock'
+                        self.show_message(f"Selected: rock", 30)
+                elif event.key == pygame.K_3:
+                    if not self.npc_mode and not self.player_start_mode:
+                        self.current_type = 'cottage'
+                        self.show_message(f"Selected: cottage", 30)
+                elif event.key == pygame.K_4:
+                    if not self.npc_mode and not self.player_start_mode:
+                        self.current_type = 'statue'
+                        self.show_message(f"Selected: statue", 30)
+                elif event.key == pygame.K_5:
+                    if not self.npc_mode and not self.player_start_mode:
+                        self.current_type = 'flashlight'
+                        self.show_message(f"Selected: flashlight", 30)
+                elif event.key == pygame.K_6:
+                    if not self.npc_mode and not self.player_start_mode:
+                        self.current_type = 'target'
+                        self.show_message(f"Selected: target", 30)
 
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 # Проверяем клики по кнопкам на панели | Check clicks on panel buttons
@@ -603,8 +639,7 @@ class SimpleMapEditor:
                     # Обработка кликов по кнопкам поворота будет добавлена позже
                     pass
 
-                # Проверяем, что клик был по области карты
-                # Check if click was on map area
+                # Проверяем, что клик был по области карты | Check if click was on map area
                 elif event.pos[0] > self.panel_width:
                     if event.button == 1:  # Левая кнопка - разместить или повернуть | Left click - place or rotate
                         # Проверяем, зажат ли Ctrl
@@ -612,8 +647,11 @@ class SimpleMapEditor:
                             # Режим поворота - ищем объект под курсором
                             closest_obj = None
                             closest_dist = float('inf')
+
+                            # Собираем все объекты для поиска
                             all_items = self.objects + self.npcs
 
+                            # Проверяем расстояние до каждого объекта
                             for obj in all_items:
                                 dist = ((obj['x'] - self.mouse_world_x) ** 2 +
                                         (obj['z'] - self.mouse_world_z) ** 2) ** 0.5
@@ -621,10 +659,18 @@ class SimpleMapEditor:
                                     closest_dist = dist
                                     closest_obj = obj
 
+                            # Также проверяем стартовую позицию игрока, если она видима
+                            if self.show_player_start:
+                                dist_to_player = ((self.player_start['x'] - self.mouse_world_x) ** 2 +
+                                                  (self.player_start['z'] - self.mouse_world_z) ** 2) ** 0.5
+                                if dist_to_player < 3.0 and dist_to_player < closest_dist:
+                                    closest_dist = dist_to_player
+                                    closest_obj = self.player_start
+
                             if closest_obj:
                                 # Начинаем поворот объекта
                                 self.rotating_object = closest_obj
-                                self.selected_object = closest_obj
+                                self.selected_object = closest_obj if closest_obj != self.player_start else None
                                 # Получаем экранные координаты для вычисления угла
                                 screen_x, screen_y = self.world_to_screen(closest_obj['x'], closest_obj['z'])
                                 self.rotation_start_mouse = (event.pos[0], event.pos[1])
@@ -632,14 +678,21 @@ class SimpleMapEditor:
                                     (screen_x, screen_y),
                                     self.rotation_start_mouse
                                 )
-                                self.show_message(f"Rotating {closest_obj.get('type', 'object')}", 30)
+                                obj_type = "player start" if closest_obj == self.player_start else closest_obj.get(
+                                    'type', 'object')
+                                self.show_message(f"Rotating {obj_type}", 30)
                         else:
                             # Обычное размещение
                             if self.player_start_mode:
                                 # Устанавливаем стартовую позицию игрока | Set player start position
                                 self.player_start['x'] = self.mouse_world_x
                                 self.player_start['z'] = self.mouse_world_z
-                                self.show_message(f"🚩 Player start set to ({self.mouse_world_x:.1f}, {self.mouse_world_z:.1f})", 60)
+                                # Сбрасываем выделение
+                                self.selected_object = None
+                                self.rotating_object = None
+                                self.player_start_mode = False
+                                self.show_message(
+                                    f"🚩 Player start set to ({self.mouse_world_x:.1f}, {self.mouse_world_z:.1f})", 60)
                             elif self.npc_mode:
                                 # Размещаем NPC | Place NPC
                                 self.npcs.append({
@@ -651,6 +704,8 @@ class SimpleMapEditor:
                                     'rot': 0
                                 })
                                 self.selected_object = None
+                                self.rotating_object = None
+                                self.npc_mode = False
                                 self.show_message("👤 NPC placed", 30)
                             else:
                                 # Размещаем обычный объект | Place regular object
@@ -672,15 +727,22 @@ class SimpleMapEditor:
                                         'rot': 0
                                     })
                                     self.selected_object = None
+                                    self.rotating_object = None
 
                     elif event.button == 3:  # Правая кнопка - удалить/выделить | Right click - delete/select
-                        # Ищем ближайший объект среди обычных объектов и NPC
-                        # Find closest object among regular objects and NPCs
+                        # Ищем ближайший объект среди обычных объектов, NPC и стартовой позиции
+                        # Find closest object among regular objects, NPCs and player start
                         closest_obj = None
                         closest_dist = float('inf')
                         all_items = self.objects + self.npcs
 
-                        for obj in all_items:
+                        # Добавляем стартовую позицию в поиск
+                        if self.show_player_start:
+                            all_items_with_start = all_items + [self.player_start]
+                        else:
+                            all_items_with_start = all_items
+
+                        for obj in all_items_with_start:
                             dist = ((obj['x'] - self.mouse_world_x) ** 2 +
                                     (obj['z'] - self.mouse_world_z) ** 2) ** 0.5
                             if dist < closest_dist and dist < 5.0:
@@ -689,19 +751,37 @@ class SimpleMapEditor:
 
                         if closest_obj:
                             if pygame.key.get_mods() & pygame.KMOD_CTRL:  # Ctrl + клик - выделить | Ctrl+click - select
-                                self.selected_object = closest_obj
-                                obj_type = closest_obj.get('type', 'npc')
-                                self.show_message(f"Selected: {obj_type}, rot: {closest_obj.get('rot', 0)}°", 60)
+                                if closest_obj == self.player_start:
+                                    # Выделяем стартовую позицию
+                                    self.selected_object = None
+                                    self.player_start_mode = True
+                                    self.npc_mode = False
+                                    self.show_message(f"Selected: player start, rot: {closest_obj.get('rot', 0)}°", 60)
+                                else:
+                                    self.selected_object = closest_obj
+                                    self.player_start_mode = False
+                                    obj_type = closest_obj.get('type', 'npc')
+                                    self.show_message(f"Selected: {obj_type}, rot: {closest_obj.get('rot', 0)}°", 60)
                             else:  # Просто правый клик - удалить | Just right click - delete
-                                if closest_obj in self.objects:
+                                if closest_obj == self.player_start:
+                                    # Не удаляем стартовую позицию, только сбрасываем на центр
+                                    self.player_start['x'] = 0
+                                    self.player_start['z'] = 0
+                                    self.player_start['rot'] = 0
+                                    self.show_message(f"Player start reset to center", 60)
+                                elif closest_obj in self.objects:
                                     self.objects.remove(closest_obj)
+                                    if self.selected_object == closest_obj:
+                                        self.selected_object = None
+                                    self.show_message(f"Deleted", 60)
                                 elif closest_obj in self.npcs:
                                     self.npcs.remove(closest_obj)
-                                if self.selected_object == closest_obj:
-                                    self.selected_object = None
+                                    if self.selected_object == closest_obj:
+                                        self.selected_object = None
+                                    self.show_message(f"Deleted", 60)
+
                                 if self.rotating_object == closest_obj:
                                     self.rotating_object = None
-                                self.show_message(f"Deleted", 60)
 
             elif event.type == pygame.MOUSEBUTTONUP:
                 if event.button == 1 and self.rotating_object:
@@ -727,8 +807,11 @@ class SimpleMapEditor:
                     self.rotation_start_angle = current_angle
 
                     # Применяем поворот
-                    current_rot = self.rotating_object.get('rot', 0)
-                    self.rotating_object['rot'] = (current_rot + angle_diff) % 360
+                    if self.rotating_object == self.player_start:
+                        self.player_start['rot'] = (self.player_start.get('rot', 0) + angle_diff) % 360
+                    else:
+                        current_rot = self.rotating_object.get('rot', 0)
+                        self.rotating_object['rot'] = (current_rot + angle_diff) % 360
 
     def run(self):
         """Главный цикл | Main loop"""

@@ -27,17 +27,14 @@ def main():
     # Загрузка карты из JSON и создание объектов мира | Load map from JSON and create world objects | Теперь получаем также player_start
     world_entities, statue_triggers_list, npcs_from_map, player_start = load_map('map.json', player=None)
 
-    # Создание игрока с параметрами из конфига и загруженной стартовой позицией | Create player with config parameters and loaded start position
     player = create_player(
         speed=PLAYER_SPEED,
         second_jump_height=PLAYER_SECOND_JUMP_HEIGHT,
         gravity=PLAYER_GRAVITY,
         mouse_sensitivity=PLAYER_MOUSE_SENSITIVITY,
-        position=(player_start['x'], player_start['y'], player_start['z'])
+        position=(player_start['x'], player_start['y'], player_start['z']),
+        rotation_y=player_start.get('rot', 0)
     )
-
-    print(
-        f"🚩 Игрок размещен в позиции ({player_start['x']:.1f}, {player_start['y']:.1f}, {player_start['z']:.1f}) | Player placed at position")
 
     # Инициализация оружия от первого лица | Initialize first-person weapon
     weapon = FPSWeapon(model_path=GLOCK_WEAPON_MODEL, scale=GLOCK_WEAPON_SCALE)
