@@ -105,20 +105,6 @@ class AnimatedNPC:
         self.collider_entity.visible = False
         self.collider_entity.texture = None
 
-        if window.show_colliders and hasattr(self.collider_entity, 'bounds'):
-            size = self.collider_entity.bounds.size
-            center = self.collider_entity.bounds.center
-
-            self.debug_box = Entity(
-                model='cube',
-                scale=size,
-                position=self.collider_entity.position + center,
-                color=color.rgba(255, 0, 0, 40),
-                wireframe=True,
-                always_on_top=True
-            )
-            self.debug_box.reparent_to(self.npc_node)
-
     def _look_at_player(self, player_pos):
         """
         Поворачивает NPC к игроку
