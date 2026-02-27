@@ -24,8 +24,8 @@ def main():
     global game_logic, player, minimap, weapon
     app = init_engine()
 
-    # Загрузка карты из JSON и создание объектов мира | Load map from JSON and create world objects | Теперь получаем также player_start
-    world_entities, statue_triggers_list, npcs_from_map, player_start = load_map('map.json', player=None)
+    # Сначала загружаем метаданные и стартовую позицию игрока | First load metadata and player start position
+    world_entities, statue_triggers_list, _, player_start = load_map('map.json', player=None, load_npcs=False, verbose=False)
 
     player = create_player(
         speed=PLAYER_SPEED,
@@ -39,8 +39,8 @@ def main():
     # Инициализация оружия от первого лица | Initialize first-person weapon
     weapon = FPSWeapon(model_path=GLOCK_WEAPON_MODEL, scale=GLOCK_WEAPON_SCALE)
 
-    # Перезагружаем карту с созданным игроком для NPC | Reload map with created player for NPCs
-    world_entities, statue_triggers_list, npcs_from_map, _ = load_map('map.json', player=player)
+    # Теперь загружаем всё остальное с созданным игроком | Now load everything else with created player
+    world_entities, statue_triggers_list, npcs_from_map, _ = load_map('map.json', player=player, load_npcs=True)
 
     # Инициализация игровой логики | Initialize game logic
     game_logic = GameLogic(
