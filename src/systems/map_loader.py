@@ -16,7 +16,7 @@ from src.core.config import (
 statue_triggers = []
 
 
-def load_map(filename='map.json', player=None):
+def load_map(filename='map.json', player=None, load_npcs=True, verbose=True):
     """
     Загрузка карты из JSON файла
     Load map from JSON file
@@ -40,11 +40,13 @@ def load_map(filename='map.json', player=None):
         with open(filepath, 'r', encoding='utf-8') as f:
             data = json.load(f)
     except FileNotFoundError:
-        print(
-            f"❌ Файл {filepath} не найден. Используются настройки по умолчанию. | File {filepath} not found. Using default settings.")
+        if verbose:
+            print(
+                f"❌ Файл {filepath} не найден. Используются настройки по умолчанию. | File {filepath} not found. Using default settings.")
         return world_entities, statue_triggers, npcs, player_start
     except json.JSONDecodeError as e:
-        print(f"❌ Ошибка парсинга JSON: {e} | JSON parsing error: {e}")
+        if verbose:
+            print(f"❌ Ошибка парсинга JSON: {e} | JSON parsing error: {e}")
         return world_entities, statue_triggers, npcs, player_start
 
     # === Загрузка стартовой позиции игрока | Load player start position ===
@@ -55,20 +57,22 @@ def load_map(filename='map.json', player=None):
             'z': float(player_start_data.get('z', 0)),
             'y': float(player_start_data.get('y', 1.0))
         }
-        print(
-            f"🚩 Загружена стартовая позиция игрока: ({player_start['x']:.1f}, {player_start['y']:.1f}, {player_start['z']:.1f}) | Player start position loaded")
+        if verbose:
+            print(
+                f"🚩 Загружена стартовая позиция игрока: ({player_start['x']:.1f}, {player_start['y']:.1f}, {player_start['z']:.1f}) | Player start position loaded")
 
     # === Масштабирование координат | Scale coordinates ===
     base_map_size = data.get("metadata", {}).get("size", 100)
     scale_factor = GROUND_SCALE / base_map_size
     map_half = GROUND_SCALE / 2.0
-
-    print(
-        f"📊 Метаданные: размер карты {base_map_size}, масштаб {scale_factor:.2f} | Metadata: map size {base_map_size}, scale {scale_factor:.2f}")
+    if verbose:
+        print(
+            f"📊 Метаданные: размер карты {base_map_size}, масштаб {scale_factor:.2f} | Metadata: map size {base_map_size}, scale {scale_factor:.2f}")
 
     # === Создание объектов | Entity Creation ===
     objects_data = data.get("objects", [])
-    print(f"📦 Загрузка {len(objects_data)} объектов... | Loading {len(objects_data)} objects...")
+    if verbose:
+        print(f"📦 Загрузка {len(objects_data)} объектов... | Loading {len(objects_data)} objects...")
 
     for i, obj in enumerate(objects_data, 1):
         obj_type = obj.get("type", "rock")
@@ -83,7 +87,7 @@ def load_map(filename='map.json', player=None):
         x_clamped = clamp(x, -map_half + 2.0, map_half - 2.0)
         z_clamped = clamp(z, -map_half + 2.0, map_half - 2.0)
 
-        if x != x_clamped or z != z_clamped:
+        if x != x_clamped or z != z_clamped and verbose:
             print(
                 f"⚠️ Объект {i} ({obj_type}) прижат к границе: ({x:.1f}, {z:.1f}) -> ({x_clamped:.1f}, {z_clamped:.1f}) | Object clamped to boundary")
 
@@ -195,13 +199,14 @@ def load_map(filename='map.json', player=None):
 
             invoke(setup_collidable_object, statue, shrink_factor=STATUE_COLLIDER_SHRINK, delay=0)
             world_entities.append(statue)
-
-    print(f"✅ Создано {len(world_entities)} объектов | Created {len(world_entities)} objects")
+    if verbose:
+        print(f"✅ Создано {len(world_entities)} объектов | Created {len(world_entities)} objects")
 
     # === Загрузка NPC из JSON | Load NPCs from JSON ===
     npcs_data = data.get("npcs", [])
-    if npcs_data:
-        print(f"👤 Загрузка {len(npcs_data)} NPC... | Loading {len(npcs_data)} NPCs...")
+    if load_npcs and npcs_data:
+        if verbose:
+            print(f"👤 Загрузка {len(npcs_data)} NPC... | Loading {len(npcs_data)} NPCs...")
 
         for i, npc_data in enumerate(npcs_data, 1):
             try:
@@ -214,12 +219,11 @@ def load_map(filename='map.json', player=None):
                 x = clamp(x, -map_half + 2.0, map_half - 2.0)
                 z = clamp(z, -map_half + 2.0, map_half - 2.0)
 
-                # Создаем NPC только если есть player
                 if player:
                     npc = AnimatedNPC(
                         start_pos=(x, y, z),
                         player=player,
-                        model_path=f'{MODELS_DIR}/droid.glb',
+                        model_path='droid.glb',
                         idle_anim=NPC_IDLE_ANIM,
                         walk_anim=NPC_WALK_ANIM,
                         run_anim=NPC_RUN_ANIM,
@@ -230,14 +234,15 @@ def load_map(filename='map.json', player=None):
                     )
                     npcs.append(npc)
                     world_entities.append(npc)
-                    print(f"  ✅ NPC {i}: позиция ({x:.1f}, {y:.1f}, {z:.1f}) | position")
                 else:
-                    print(f"  ⚠️ NPC {i}: не создан (нет player) | not created (no player)")
+                    if verbose:
+                        print(f"  ⚠️ NPC {i}: не создан (нет player) | not created (no player)")
 
             except Exception as e:
-                print(f"  ❌ Ошибка загрузки NPC {i}: {e} | Error loading NPC {i}: {e}")
-
-    print(
-        f"📊 Итого: {len(world_entities)} объектов, {len(statue_triggers)} триггеров, {len(npcs)} NPC | Total: {len(world_entities)} objects, {len(statue_triggers)} triggers, {len(npcs)} NPCs")
+                if verbose:
+                    print(f"  ❌ Ошибка загрузки NPC {i}: {e} | Error loading NPC {i}: {e}")
+    if verbose:
+        print(
+            f"📊 Итого: {len(world_entities)} объектов, {len(statue_triggers)} триггеров, {len(npcs)} NPC | Total: {len(world_entities)} objects, {len(statue_triggers)} triggers, {len(npcs)} NPCs")
 
     return world_entities, statue_triggers, npcs, player_start

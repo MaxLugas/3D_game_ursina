@@ -7,7 +7,8 @@ from collections import deque
 
 from src.core.config import (
     NPC_SPEED_WALK, NPC_SPEED_RUN, NPC_ATTACK_DISTANCE, NPC_IDLE_DISTANCE,
-    MODELS_DIR, COLLIDER_SHRINK_FACTOR
+    MODELS_DIR, COLLIDER_SHRINK_FACTOR, NPC_MIN_CHASE_DISTANCE, NPC_WALK_ANIM, NPC_RUN_ANIM, NPC_SKILL_ANIM,
+    NPC_IDLE_ANIM
 )
 from src.shaders.comics_shader import npc_shader_panda
 from src.utils.object_setup import setup_collidable_object
@@ -15,7 +16,7 @@ from src.utils.object_setup import setup_collidable_object
 
 class AnimatedNPC:
     def __init__(self, start_pos, player, model_path=f'{MODELS_DIR}/droid.glb',
-                 idle_anim='Idle', walk_anim='Walking', run_anim='Running', skill_anim='Skill_01',
+                 idle_anim=NPC_IDLE_ANIM, walk_anim=NPC_WALK_ANIM, run_anim=NPC_RUN_ANIM, skill_anim=NPC_SKILL_ANIM,
                  fix_orientation=True, scale=2.0, speed_walk=NPC_SPEED_WALK, speed_run=NPC_SPEED_RUN,
                  shrink_factor=COLLIDER_SHRINK_FACTOR):
 
@@ -27,7 +28,7 @@ class AnimatedNPC:
         self.model_path = model_path
 
         # Состояния NPC | NPC states
-        self.state = 'idle'
+        self.state = NPC_IDLE_ANIM
 
         # Флаг для однократного взаимодействия | One-time interaction flag
         self.talked = False
@@ -104,20 +105,6 @@ class AnimatedNPC:
         self.collider_entity.reparent_to(self.npc_node)
         self.collider_entity.visible = False
         self.collider_entity.texture = None
-
-        if window.show_colliders and hasattr(self.collider_entity, 'bounds'):
-            size = self.collider_entity.bounds.size
-            center = self.collider_entity.bounds.center
-
-            self.debug_box = Entity(
-                model='cube',
-                scale=size,
-                position=self.collider_entity.position + center,
-                color=color.rgba(255, 0, 0, 40),
-                wireframe=True,
-                always_on_top=True
-            )
-            self.debug_box.reparent_to(self.npc_node)
 
     def _look_at_player(self, player_pos):
         """
@@ -251,6 +238,10 @@ class AnimatedNPC:
         Move toward target with collision detection and pathfinding
         """
         current = self.npc_node.get_pos()
+
+        distance_to_target = (target - current).length()
+        if distance_to_target <= NPC_MIN_CHASE_DISTANCE:
+            return
 
         if self._is_stuck():
             if self._find_alternative_path(target):
@@ -479,34 +470,34 @@ class AnimatedNPC:
             self._look_at_player(player_pos)
 
         # Логика состояний | State machine
-        if self.state == 'idle':
+        if self.state == NPC_IDLE_ANIM:
             if distance_to_player < NPC_IDLE_DISTANCE:
-                self.state = 'walking'
+                self.state = NPC_WALK_ANIM
                 if self.walk_anim in self.actor.get_anim_names():
                     self.actor.loop(self.walk_anim)
 
-        elif self.state == 'walking':
+        elif self.state == NPC_WALK_ANIM:
             if distance_to_player < NPC_ATTACK_DISTANCE:
-                self.state = 'attacking'
+                self.state = NPC_SKILL_ANIM
                 if self.skill_anim in self.actor.get_anim_names():
                     self.actor.play(self.skill_anim)
             elif distance_to_player >= NPC_IDLE_DISTANCE:
-                self.state = 'idle'
+                self.state = NPC_IDLE_ANIM
                 if self.idle_anim in self.actor.get_anim_names():
                     self.actor.loop(self.idle_anim)
             else:
                 # Идти к игроку| Walk toward player
                 self._move_toward(player_pos, self.speed_walk)
 
-        elif self.state == 'attacking':
+        elif self.state == NPC_SKILL_ANIM:
             if current_anim != self.skill_anim:
-                self.state = 'running'
+                self.state = NPC_RUN_ANIM
                 if self.run_anim in self.actor.get_anim_names():
                     self.actor.loop(self.run_anim)
 
-        elif self.state == 'running':
+        elif self.state == NPC_RUN_ANIM:
             if distance_to_player >= NPC_IDLE_DISTANCE:
-                self.state = 'idle'
+                self.state = NPC_IDLE_ANIM
                 if self.idle_anim in self.actor.get_anim_names():
                     self.actor.loop(self.idle_anim)
             else:
@@ -532,7 +523,7 @@ class AnimatedNPC:
         Устанавливает состояние NPC
         Sets NPC state
         """
-        valid_states = ['idle', 'walking', 'attacking', 'running']
+        valid_states = [NPC_IDLE_ANIM, NPC_WALK_ANIM, NPC_SKILL_ANIM, NPC_RUN_ANIM]
         if new_state in valid_states:
             self.state = new_state
         else:

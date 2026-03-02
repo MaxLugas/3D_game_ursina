@@ -30,16 +30,17 @@ SOUND_GLOCK_RELOAD = 'Glock_reload'                     # Имя звуково�
 RELOAD_PITCH = 0.62                                     # Замедление звука перезарядки | Reload sound pitch slowdown factor
 
 # ================ NPC | NPC ================
-NPC_SPEED_WALK = 3.0                                    # Скорость ходьбы NPC | NPC walking speed
-NPC_SPEED_RUN = 5.0                                     # Скорость бега NPC при преследовании | NPC running speed when chasing
+NPC_SPEED_WALK = 4.0                                    # Скорость ходьбы NPC | NPC walking speed
+NPC_SPEED_RUN = 8                                       # Скорость бега NPC при преследовании | NPC running speed when chasing
 NPC_IDLE_DISTANCE = 15                                  # Дистанция активации преследования | Distance to trigger chase behavior
 NPC_ATTACK_DISTANCE = 10                                # Дистанция начала бега к игроку | Distance to start running toward player
+NPC_MIN_CHASE_DISTANCE = 2.0
 
 # Анимации NPC | NPC animations
 NPC_IDLE_ANIM = 'Idle'                                  # Анимация бездействия | Idle animation
 NPC_WALK_ANIM = 'Walking'                               # Анимация ходьбы | Walking animation
-NPC_RUN_ANIM = 'Running'                                # Анимация бега | Running animation
-NPC_SKILL_ANIM = 'Skill_01'                             # Анимация навыка/атаки | Skill/attack animation
+NPC_RUN_ANIM = 'Running_02'                                # Анимация бега | Running animation
+NPC_SKILL_ANIM = 'Berserker_Call'                             # Анимация навыка/атаки | Skill/attack animation
 NPC_SCALE = 2.0                                         # Масштаб NPC | NPC scale
 
 # ================ Коллайдеры | Colliders ================
