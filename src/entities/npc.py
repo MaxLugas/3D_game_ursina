@@ -6,9 +6,10 @@ import random
 from collections import deque
 
 from src.core.config import (
-    NPC_SPEED_WALK, NPC_SPEED_RUN, NPC_ATTACK_DISTANCE, NPC_IDLE_DISTANCE,
-    MODELS_DIR, COLLIDER_SHRINK_FACTOR, NPC_MIN_CHASE_DISTANCE, NPC_WALK_ANIM, NPC_RUN_ANIM, NPC_SKILL_ANIM,
-    NPC_IDLE_ANIM
+    NPC_SPEED_WALK, NPC_SPEED_RUN_1, NPC_ATTACK_DISTANCE, NPC_IDLE_DISTANCE, NPC_ATTACK_TRIGGER_DISTANCE,
+    MODELS_DIR, COLLIDER_SHRINK_FACTOR, NPC_MIN_CHASE_DISTANCE, NPC_WALK_ANIM, NPC_RUN_ANIM_1, NPC_SKILL_ANIM,
+    NPC_IDLE_ANIM, NPC_ATTACK_ANIM_1, NPC_RUN_ANIM_2, NPC_SPEED_RUN_2
+
 )
 from src.shaders.comics_shader import npc_shader_panda
 from src.utils.object_setup import setup_collidable_object
@@ -16,22 +17,26 @@ from src.utils.object_setup import setup_collidable_object
 
 class AnimatedNPC:
     def __init__(self, start_pos, player, model_path=f'{MODELS_DIR}/droid.glb',
-                 idle_anim=NPC_IDLE_ANIM, walk_anim=NPC_WALK_ANIM, run_anim=NPC_RUN_ANIM, skill_anim=NPC_SKILL_ANIM,
-                 fix_orientation=True, scale=2.0, speed_walk=NPC_SPEED_WALK, speed_run=NPC_SPEED_RUN,
+                 idle_anim=NPC_IDLE_ANIM, walk_anim=NPC_WALK_ANIM, run_anim_1=NPC_RUN_ANIM_1, run_anim_2=NPC_RUN_ANIM_2,
+                 skill_anim=NPC_SKILL_ANIM, attack_anim_1=NPC_ATTACK_ANIM_1, fix_orientation=True, scale=2.0,
+                 speed_walk=NPC_SPEED_WALK, speed_run_1=NPC_SPEED_RUN_1, speed_run_2=NPC_SPEED_RUN_2,
                  shrink_factor=COLLIDER_SHRINK_FACTOR):
 
         self.player = player
         self.speed_walk = speed_walk
-        self.speed_run = speed_run
+        self.speed_run_1 = speed_run_1
+        self.speed_run_2 = speed_run_2
         self._scale = scale
         self._shrink_factor = shrink_factor
         self.model_path = model_path
 
         # Состояния NPC | NPC states
-        self.state = NPC_IDLE_ANIM
+        self.state = idle_anim
 
         # Флаг для однократного взаимодействия | One-time interaction flag
         self.talked = False
+
+        self.skill_used = False
 
         # === Память препятствий | Obstacle memory===
         self.obstacle_memory = {}  # Словарь: позиция -> время запоминания | Dictionary: position -> memorization time
@@ -70,12 +75,15 @@ class AnimatedNPC:
         # Имена анимаций | Animation names
         self.idle_anim = idle_anim
         self.walk_anim = walk_anim
-        self.run_anim = run_anim
+        self.run_anim_1 = run_anim_1
+        self.run_anim_2 = run_anim_2
         self.skill_anim = skill_anim
+        self.attack_anim_1 = attack_anim_1
 
         # Проверка доступных анимаций | Check available animations
         available = set(self.actor.get_anim_names())
-        for anim in [idle_anim, walk_anim, run_anim, skill_anim]:
+
+        for anim in [idle_anim, walk_anim, run_anim_1, run_anim_2, skill_anim, attack_anim_1]:
             if anim not in available:
                 print(
                     f"⚠️ Анимация '{anim}' не найдена. Доступны: {list(available)} | Animation '{anim}' not found. Available: {list(available)}")
@@ -459,6 +467,9 @@ class AnimatedNPC:
         Обновление состояния NPC (вызывается каждый кадр)
         Update NPC state (called every frame)
         """
+        if not self.player:
+            return
+
         npc_pos = self.npc_node.get_pos()
         player_pos = self.player.position
         distance_to_player = (npc_pos - player_pos).length()
@@ -469,40 +480,86 @@ class AnimatedNPC:
         if distance_to_player < NPC_IDLE_DISTANCE:
             self._look_at_player(player_pos)
 
+        RUN_TRIGGER_DISTANCE = 15
+
+        if self.skill_used and distance_to_player < RUN_TRIGGER_DISTANCE and self.state == self.idle_anim:
+            self.state = self.run_anim_2
+            if self.run_anim_2 in self.actor.get_anim_names():
+                self.actor.loop(self.run_anim_2)
+
         # Логика состояний | State machine
-        if self.state == NPC_IDLE_ANIM:
+        if self.state == self.idle_anim:
             if distance_to_player < NPC_IDLE_DISTANCE:
-                self.state = NPC_WALK_ANIM
+                self.state = self.walk_anim
                 if self.walk_anim in self.actor.get_anim_names():
                     self.actor.loop(self.walk_anim)
 
-        elif self.state == NPC_WALK_ANIM:
+        elif self.state == self.walk_anim:
             if distance_to_player < NPC_ATTACK_DISTANCE:
-                self.state = NPC_SKILL_ANIM
+                self.state = self.skill_anim
                 if self.skill_anim in self.actor.get_anim_names():
                     self.actor.play(self.skill_anim)
             elif distance_to_player >= NPC_IDLE_DISTANCE:
-                self.state = NPC_IDLE_ANIM
+                self.state = self.idle_anim
                 if self.idle_anim in self.actor.get_anim_names():
                     self.actor.loop(self.idle_anim)
             else:
                 # Идти к игроку| Walk toward player
                 self._move_toward(player_pos, self.speed_walk)
 
-        elif self.state == NPC_SKILL_ANIM:
+        elif self.state == self.skill_anim:
             if current_anim != self.skill_anim:
-                self.state = NPC_RUN_ANIM
-                if self.run_anim in self.actor.get_anim_names():
-                    self.actor.loop(self.run_anim)
+                self.skill_used = True
+                self.state = self.run_anim_1
+                if self.run_anim_1 in self.actor.get_anim_names():
+                    self.actor.loop(self.run_anim_1)
+            elif distance_to_player >= NPC_IDLE_DISTANCE:
+                self.state = self.idle_anim
+                if self.idle_anim in self.actor.get_anim_names():
+                    self.actor.loop(self.idle_anim)
 
-        elif self.state == NPC_RUN_ANIM:
-            if distance_to_player >= NPC_IDLE_DISTANCE:
-                self.state = NPC_IDLE_ANIM
+        elif self.state == self.run_anim_1:
+            if distance_to_player < NPC_ATTACK_TRIGGER_DISTANCE:
+                self.state = self.attack_anim_1
+                if self.attack_anim_1 in self.actor.get_anim_names():
+                    self.actor.play(self.attack_anim_1)
+            elif distance_to_player >= NPC_IDLE_DISTANCE:
+                self.state = self.idle_anim
                 if self.idle_anim in self.actor.get_anim_names():
                     self.actor.loop(self.idle_anim)
             else:
-                # Бежать к игроку | Run toward player
-                self._move_toward(player_pos, self.speed_run)
+                # Бежать к игроку со скоростью run_1 | Run to player with run_1
+                self._move_toward(player_pos, self.speed_run_1)
+
+        # === Вторая анимация бега с увеличенной скоростью | Second run animation ===
+        elif self.state == self.run_anim_2:
+            if distance_to_player < NPC_ATTACK_TRIGGER_DISTANCE:
+                self.state = self.attack_anim_1
+                if self.attack_anim_1 in self.actor.get_anim_names():
+                    self.actor.play(self.attack_anim_1)
+            elif distance_to_player >= NPC_IDLE_DISTANCE:
+                self.state = self.idle_anim
+                if self.idle_anim in self.actor.get_anim_names():
+                    self.actor.loop(self.idle_anim)
+            else:
+                # Бежать к игроку с увеличенной скоростью run_2 | Run to player with run_2
+                self._move_toward(player_pos, self.speed_run_2)
+
+        elif self.state == self.attack_anim_1:
+            if current_anim != self.attack_anim_1:
+                if distance_to_player < NPC_IDLE_DISTANCE:
+                    if self.skill_used:
+                        self.state = self.run_anim_2
+                        if self.run_anim_2 in self.actor.get_anim_names():
+                            self.actor.loop(self.run_anim_2)
+                    else:
+                        self.state = self.run_anim_1
+                        if self.run_anim_1 in self.actor.get_anim_names():
+                            self.actor.loop(self.run_anim_1)
+                else:
+                    self.state = self.idle_anim
+                    if self.idle_anim in self.actor.get_anim_names():
+                        self.actor.loop(self.idle_anim)
 
     def get_position(self):
         """
@@ -523,8 +580,16 @@ class AnimatedNPC:
         Устанавливает состояние NPC
         Sets NPC state
         """
-        valid_states = [NPC_IDLE_ANIM, NPC_WALK_ANIM, NPC_SKILL_ANIM, NPC_RUN_ANIM]
+        valid_states = [self.idle_anim, self.walk_anim, self.skill_anim, self.run_anim_1, self.run_anim_2,
+                        self.attack_anim_1]
         if new_state in valid_states:
             self.state = new_state
         else:
             print(f"⚠️ Неверное состояние: {new_state} | Invalid state: {new_state}")
+
+    def reset_skill_flag(self):
+        """
+        Сброс флага использования скилла (если нужно)
+        Reset skill usage flag (if needed)
+        """
+        self.skill_used = False

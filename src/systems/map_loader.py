@@ -9,8 +9,8 @@ from src.core.config import (
     FLASHLIGHT_COLLIDER_SHRINK, TARGET_COLLIDER_SHRINK,
     ROCK_COLOR, TREE_COLOR, COTTAGE_COLOR, FLASHLIGHT_COLOR,
     STATUE_COLOR, TARGET_COLOR, SPECULAR_FACTOR,
-    NPC_SPEED_WALK, NPC_SPEED_RUN, MODELS_DIR,
-    NPC_IDLE_ANIM, NPC_WALK_ANIM, NPC_RUN_ANIM, NPC_SKILL_ANIM, NPC_SCALE
+    NPC_SPEED_WALK, NPC_SPEED_RUN_1, MODELS_DIR,
+    NPC_IDLE_ANIM, NPC_WALK_ANIM, NPC_RUN_ANIM_1, NPC_SKILL_ANIM, NPC_SCALE
 )
 
 statue_triggers = []
@@ -226,11 +226,11 @@ def load_map(filename='map.json', player=None, load_npcs=True, verbose=True):
                         model_path='droid.glb',
                         idle_anim=NPC_IDLE_ANIM,
                         walk_anim=NPC_WALK_ANIM,
-                        run_anim=NPC_RUN_ANIM,
+                        run_anim_1=NPC_RUN_ANIM_1,
                         skill_anim=NPC_SKILL_ANIM,
                         scale=npc_data.get("scale", NPC_SCALE),
                         speed_walk=NPC_SPEED_WALK,
-                        speed_run=NPC_SPEED_RUN
+                        speed_run_1=NPC_SPEED_RUN_1
                     )
                     npcs.append(npc)
                     world_entities.append(npc)
