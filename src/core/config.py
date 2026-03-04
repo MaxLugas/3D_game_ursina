@@ -6,6 +6,7 @@ BASE_DIR = Path(__file__).parent.parent.parent          # Корневая ди�
 ASSETS_DIR = Path(__file__).parent.parent / 'assets'    # Директория с игровыми ресурсами | Game assets directory
 MODELS_DIR = ASSETS_DIR / 'models'                      # Директория 3D-моделей | 3D models directory
 AUDIO_DIR = ASSETS_DIR / 'audio'                        # Директория аудиофайлов | Audio files directory
+ICONS_DIR = ASSETS_DIR / 'icons'                        # Директория иконок | Icons directory
 
 # ================ Игровые параметры | Game Parameters ================
 GROUND_SCALE = 100                                      # Размер игрового поля | Game field size
