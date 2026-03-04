@@ -8,23 +8,24 @@ import json
 import sys
 from pathlib import Path
 import math
+from src.core.config import GROUND_SCALE, ICONS_DIR
 
 # Добавляем путь к проекту | Add project path to sys.path
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from src.core.config import GROUND_SCALE
 
 
-class SimpleMapEditor:
+class MapEditor:
     def __init__(self):
         pygame.init()
 
         # Настройки окна | Window settings
         self.panel_width = 280
-        self.map_width = 800
-        self.screen_width = self.map_width + self.panel_width
-        self.screen_height = 600
+        self.map_width = 780  # Уменьшили с 800 до 750
+        self.map_offset = 20  # Добавили отступ
+        self.screen_width = self.map_width + self.panel_width + self.map_offset * 2  # 750 + 280 + 80 = 1110
+        self.screen_height = 600 + self.map_offset * 2  # 600 + 80 = 680
         self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
-        pygame.display.set_caption("Simple Map Editor")
+        pygame.display.set_caption("Map Editor")
 
         # Параметры карты | Map parameters
         self.map_size = GROUND_SCALE
@@ -69,17 +70,8 @@ class SimpleMapEditor:
             'player_start': (0, 255, 255)  # голубой для старта игрока | cyan for player start
         }
 
-        # Иконки для объектов (emoji) | Object icons
-        self.icons = {
-            'tree': '🌲',
-            'rock': '🪨',
-            'cottage': '🏠',
-            'statue': '🗿',
-            'flashlight': '🔦',
-            'target': '🎯',
-            'npc': '👤',  # человечек для NPC | person icon for NPC
-            'player_start': '🚩'  # флажок для старта игрока | flag for player start
-        }
+        self.icon_images = {}
+        self.load_icon_images()
 
         # Шрифты | Fonts
         self.font = pygame.font.Font(None, 24)
@@ -107,18 +99,51 @@ class SimpleMapEditor:
         self.running = True
         self.clock = pygame.time.Clock()
 
+    def load_icon_images(self):
+        icon_types = ['tree', 'rock', 'cottage', 'statue', 'flashlight',
+                      'target', 'npc', 'player_start']
+
+        print(f"Загрузка иконок из папки | Load icons from folder: {ICONS_DIR}")
+
+        # Проверяем, существует ли папка
+        if not ICONS_DIR.exists():
+            print(f"⚠️ Папка с иконками не найдена | No icons folder: {ICONS_DIR}")
+            return
+
+        loaded_count = 0
+        for icon_type in icon_types:
+            try:
+                icon_path = ICONS_DIR / f"{icon_type}.png"
+                if icon_path.exists():
+                    # Загружаем иконку | Load icon
+                    icon = pygame.image.load(str(icon_path)).convert_alpha()
+                    self.icon_images[icon_type] = pygame.transform.scale(icon, (24, 24))
+                    loaded_count += 1
+                    print(f"Загружена иконка | Icon loaded: {icon_type}.png")
+                else:
+                    print(f"Иконка не найдена | No icon: {icon_type}.png")
+            except Exception as e:
+                print(f"Ошибка загрузки | Load error {icon_type}.png: {e}")
+
+        print(f"Загружено иконок | Loaded icons: {loaded_count}/{len(icon_types)}")
+
     def screen_to_world(self, screen_x, screen_y):
         """Конвертация экранных координат в мировые | Convert screen coordinates to world coordinates"""
         # Учитываем отступ для панели | Account for panel offset
-        map_screen_x = screen_x - self.panel_width
-        if map_screen_x < 0:
-            map_screen_x = 0
+        map_left = self.panel_width + self.map_offset
+        map_right = map_left + self.map_width
+        map_top = self.map_offset
+        map_bottom = self.screen_height - self.map_offset
 
-        world_x = (map_screen_x / self.map_width - 0.5) * self.map_size
+        if screen_x < map_left or screen_x > map_right or screen_y < map_top or screen_y > map_bottom:
+            return self.mouse_world_x, self.mouse_world_z
 
-        world_z = -((screen_y / self.screen_height - 0.5) * self.map_size)
+        map_x = screen_x - map_left
+        map_y = screen_y - map_top
 
-        # Привязка к сетке (если включена) | Snap to grid (if enabled)
+        world_x = (map_x / self.map_width - 0.5) * self.map_size
+        world_z = -((map_y / (self.screen_height - self.map_offset * 2) - 0.5) * self.map_size)
+
         if self.snap_to_grid:
             grid_x = round((world_x + self.map_size / 2) / self.cell_size)
             grid_z = round((world_z + self.map_size / 2) / self.cell_size)
@@ -129,8 +154,12 @@ class SimpleMapEditor:
 
     def world_to_screen(self, world_x, world_z):
         """Конвертация мировых координат в экранные | Convert world coordinates to screen coordinates"""
-        screen_x = (world_x / self.map_size + 0.5) * self.map_width + self.panel_width
-        screen_y = (-world_z / self.map_size + 0.5) * self.screen_height
+        map_left = self.panel_width + self.map_offset
+        map_top = self.map_offset
+        map_height = self.screen_height - self.map_offset * 2
+
+        screen_x = (world_x / self.map_size + 0.5) * self.map_width + map_left
+        screen_y = (-world_z / self.map_size + 0.5) * map_height + map_top
         return int(screen_x), int(screen_y)
 
     def draw_grid(self):
@@ -140,14 +169,24 @@ class SimpleMapEditor:
 
         cell_size_px = self.map_width / self.grid_size
 
-        for i in range(self.grid_size + 1):
-            x = i * cell_size_px + self.panel_width
-            # Вертикальные линии | Vertical lines
-            pygame.draw.line(self.screen, (100, 100, 100), (x, 0), (x, self.screen_height), 1)
+        map_left = self.panel_width + self.map_offset
+        map_right = map_left + self.map_width
+        map_top = self.map_offset
+        map_bottom = self.screen_height - self.map_offset
 
-            y = i * cell_size_px
+        for i in range(self.grid_size + 1):
+            x = i * cell_size_px + map_left
+            # Вертикальные линии | Vertical lines
+            if map_left <= x <= map_right:
+                pygame.draw.line(self.screen, (100, 100, 100), (x, map_top), (x, map_bottom), 1)
+
+        for i in range(self.grid_size + 1):
+            y = i * cell_size_px + map_top
             # Горизонтальные линии | Horizontal lines
-            pygame.draw.line(self.screen, (100, 100, 100), (self.panel_width, y), (self.screen_width, y), 1)
+            if map_top <= y <= map_bottom:
+                pygame.draw.line(self.screen, (100, 100, 100), (map_left, y), (map_right, y), 1)
+
+        pygame.draw.line(self.screen, (100, 100, 100), (map_left, map_bottom), (map_right, map_bottom), 1)
 
     def draw_objects(self):
         """Рисуем все объекты, NPC и стартовую позицию игрока | Draw all objects, NPCs and player start position"""
@@ -155,27 +194,15 @@ class SimpleMapEditor:
         if self.show_player_start:
             screen_x, screen_y = self.world_to_screen(self.player_start['x'], self.player_start['z'])
 
-            # Маркер старта игрока (голубой ромб) | Player start marker (cyan diamond)
-            points = [
-                (screen_x, screen_y - 15),
-                (screen_x + 15, screen_y),
-                (screen_x, screen_y + 15),
-                (screen_x - 15, screen_y)
-            ]
-            pygame.draw.polygon(self.screen, (0, 255, 255), points)
-            pygame.draw.polygon(self.screen, (255, 255, 255), points, 2)
-
-            # Иконка флажка | Flag icon
-            text = self.font.render("🚩", True, (255, 255, 255))
-            self.screen.blit(text, (screen_x - 8, screen_y - 12))
+            if 'player_start' in self.icon_images:
+                icon_rect = self.icon_images['player_start'].get_rect(center=(screen_x, screen_y - 2))
+                self.screen.blit(self.icon_images['player_start'], icon_rect)
 
             # Рисуем направление взгляда игрока | Draw player view direction
             rot = self.player_start.get('rot', 0)
-            # Рисуем линию направления
-            end_x = screen_x + 25 * math.cos(math.radians(rot))
-            end_y = screen_y - 25 * math.sin(math.radians(rot))
+            end_x = screen_x + 15 * math.cos(math.radians(rot))
+            end_y = screen_y - 15 * math.sin(math.radians(rot))
             pygame.draw.line(self.screen, (255, 255, 255), (screen_x, screen_y), (end_x, end_y), 3)
-            # Рисуем текст с углом
             rot_text = self.small_font.render(f"{rot}°", True, (255, 255, 255))
             self.screen.blit(rot_text, (screen_x + 30, screen_y - 20))
 
@@ -188,34 +215,34 @@ class SimpleMapEditor:
             if self.selected_object == obj or self.rotating_object == obj:
                 pygame.draw.circle(self.screen, (255, 255, 0), (screen_x, screen_y), 15, 3)
 
-                # Рисуем указатель направления для выделенного объекта
-                # Draw direction indicator for selected object
                 if 'rot' in obj:
                     rot = obj.get('rot', 0)
-                    # Рисуем линию направления
                     end_x = screen_x + 20 * math.cos(math.radians(rot))
                     end_y = screen_y - 20 * math.sin(math.radians(rot))
                     pygame.draw.line(self.screen, (255, 255, 0), (screen_x, screen_y), (end_x, end_y), 3)
-                    # Рисуем текст с углом
                     rot_text = self.small_font.render(f"{rot}°", True, (255, 255, 0))
                     self.screen.blit(rot_text, (screen_x + 25, screen_y - 15))
 
-            # Маркер объекта | Object marker
-            color = self.colors.get(obj['type'], (255, 255, 255))
-            pygame.draw.circle(self.screen, color, (screen_x, screen_y), 10)
-            pygame.draw.circle(self.screen, (255, 255, 255), (screen_x, screen_y), 10, 1)
+            # Проверяем, есть ли PNG иконка для объекта | Check PNG icon for object
+            if obj['type'] in self.icon_images:
+                self.screen.blit(self.icon_images[obj['type']], (screen_x - 10, screen_y - 10))
 
-            # Подпись (первая буква) | Label (first letter)
-            text = self.font.render(obj['type'][0].upper(), True, (255, 255, 255))
-            self.screen.blit(text, (screen_x - 5, screen_y - 15))
+                if 'rot' in obj and obj['rot'] != 0:
+                    rot = obj.get('rot', 0)
+                    arrow_x = screen_x + 8 * math.cos(math.radians(rot))
+                    arrow_y = screen_y - 8 * math.sin(math.radians(rot))
+                    pygame.draw.line(self.screen, (255, 255, 255), (screen_x, screen_y), (arrow_x, arrow_y), 2)
+            else:
+                # Если нет PNG иконки, рисуем только цветной маркер | Draw marker if not icon
+                color = self.colors.get(obj['type'], (255, 255, 255))
+                pygame.draw.circle(self.screen, color, (screen_x, screen_y), 10)
+                pygame.draw.circle(self.screen, (255, 255, 255), (screen_x, screen_y), 10, 1)
 
-            # Показываем маленькую стрелку направления для всех объектов
-            # Show small direction arrow for all objects
-            if 'rot' in obj and obj['rot'] != 0:
-                rot = obj.get('rot', 0)
-                arrow_x = screen_x + 8 * math.cos(math.radians(rot))
-                arrow_y = screen_y - 8 * math.sin(math.radians(rot))
-                pygame.draw.line(self.screen, (255, 255, 255), (screen_x, screen_y), (arrow_x, arrow_y), 2)
+                if 'rot' in obj and obj['rot'] != 0:
+                    rot = obj.get('rot', 0)
+                    arrow_x = screen_x + 8 * math.cos(math.radians(rot))
+                    arrow_y = screen_y - 8 * math.sin(math.radians(rot))
+                    pygame.draw.line(self.screen, (255, 255, 255), (screen_x, screen_y), (arrow_x, arrow_y), 2)
 
         # Рисуем NPC | Draw NPCs
         for npc in self.npcs:
@@ -226,13 +253,11 @@ class SimpleMapEditor:
             if self.selected_object == npc or self.rotating_object == npc:
                 pygame.draw.circle(self.screen, (255, 255, 0), (screen_x, screen_y), 20, 3)
 
-            # Маркер NPC (красный квадрат) | NPC marker (red square)
-            pygame.draw.rect(self.screen, (255, 0, 0), (screen_x - 12, screen_y - 12, 24, 24))
-            pygame.draw.rect(self.screen, (255, 255, 255), (screen_x - 12, screen_y - 12, 24, 24), 2)
-
-            # Иконка NPC | NPC icon
-            text = self.font.render("👤", True, (255, 255, 255))
-            self.screen.blit(text, (screen_x - 8, screen_y - 12))
+            if 'npc' in self.icon_images:
+                self.screen.blit(self.icon_images['npc'], (screen_x - 10, screen_y - 10))
+            else:
+                pygame.draw.rect(self.screen, (255, 0, 0), (screen_x - 12, screen_y - 12, 24, 24))
+                pygame.draw.rect(self.screen, (255, 255, 255), (screen_x - 12, screen_y - 12, 24, 24), 2)
 
     def draw_info_panel(self):
         """Рисуем прокручиваемую информационную панель слева | Draw scrollable info panel on the left"""
@@ -295,48 +320,6 @@ class SimpleMapEditor:
             panel_surface.blit(rot_value, (30, y_offset))
             y_offset += 20
 
-            # Подсказка для мыши | Mouse hint
-            mouse_hint = self.small_font.render("Ctrl+LMB: drag to rotate", True, (255, 255, 0))
-            panel_surface.blit(mouse_hint, (20, y_offset))
-            y_offset += 25
-
-            # Кнопки поворота | Rotation buttons
-            btn_width = 40
-            btn_height = 30
-
-            # Кнопка -45
-            minus_btn = pygame.Rect(20, y_offset, btn_width, btn_height)
-            pygame.draw.rect(panel_surface, (100, 100, 200), minus_btn)
-            minus_text = self.small_font.render("-45", True, (255, 255, 255))
-            panel_surface.blit(minus_text, (25, y_offset + 5))
-
-            # Кнопка -15
-            minus15_btn = pygame.Rect(70, y_offset, btn_width, btn_height)
-            pygame.draw.rect(panel_surface, (100, 100, 200), minus15_btn)
-            minus15_text = self.small_font.render("-15", True, (255, 255, 255))
-            panel_surface.blit(minus15_text, (75, y_offset + 5))
-
-            # Кнопка +15
-            plus15_btn = pygame.Rect(120, y_offset, btn_width, btn_height)
-            pygame.draw.rect(panel_surface, (100, 100, 200), plus15_btn)
-            plus15_text = self.small_font.render("+15", True, (255, 255, 255))
-            panel_surface.blit(plus15_text, (125, y_offset + 5))
-
-            # Кнопка +45
-            plus_btn = pygame.Rect(170, y_offset, btn_width, btn_height)
-            pygame.draw.rect(panel_surface, (100, 100, 200), plus_btn)
-            plus_text = self.small_font.render("+45", True, (255, 255, 255))
-            panel_surface.blit(plus_text, (175, y_offset + 5))
-
-            y_offset += 40
-
-            # Кнопка сброса | Reset button
-            reset_btn = pygame.Rect(20, y_offset, 100, 30)
-            pygame.draw.rect(panel_surface, (200, 100, 100), reset_btn)
-            reset_text = self.small_font.render("Reset (0°)", True, (255, 255, 255))
-            panel_surface.blit(reset_text, (25, y_offset + 5))
-            y_offset += 40
-
             pygame.draw.line(panel_surface, (100, 100, 100), (10, y_offset), (self.panel_width - 30, y_offset), 1)
             y_offset += 15
 
@@ -346,38 +329,61 @@ class SimpleMapEditor:
         y_offset += 25
 
         # Кнопка для стартовой позиции игрока | Player start button
-        player_start_color = (0, 255, 255) if self.player_start_mode else (100, 100, 100)
-        pygame.draw.rect(panel_surface, player_start_color, (20, y_offset, 30, 30))
-        pygame.draw.rect(panel_surface, (255, 255, 255), (20, y_offset, 30, 30), 1)
-        start_text = self.small_font.render("🚩 Start", True, (255, 255, 255))
+        pygame.draw.rect(panel_surface, (40, 40, 40), (20, y_offset, 30, 30))
+        pygame.draw.rect(panel_surface, (60, 60, 60), (20, y_offset, 30, 30), 1)
+
+        if 'player_start' in self.icon_images:
+            icon_rect = self.icon_images['player_start'].get_rect(center=(35, y_offset + 15))
+            panel_surface.blit(self.icon_images['player_start'], icon_rect)
+
+        start_text = self.small_font.render("Start", True, (255, 255, 255))
         panel_surface.blit(start_text, (60, y_offset + 5))
         key_text = self.small_font.render("[P]", True, (255, 215, 0))
         panel_surface.blit(key_text, (self.panel_width - 70, y_offset + 5))
         y_offset += 40
 
         # Режим NPC | NPC mode
-        npc_color = (255, 0, 0) if self.npc_mode else (100, 100, 100)
-        pygame.draw.rect(panel_surface, npc_color, (20, y_offset, 30, 30))
-        pygame.draw.rect(panel_surface, (255, 255, 255), (20, y_offset, 30, 30), 1)
-        npc_text = self.small_font.render("👤 NPC", True, (255, 255, 255))
+        pygame.draw.rect(panel_surface, (40, 40, 40), (20, y_offset, 30, 30))
+        pygame.draw.rect(panel_surface, (60, 60, 60), (20, y_offset, 30, 30), 1)
+
+        if 'npc' in self.icon_images:
+            icon_rect = self.icon_images['npc'].get_rect(center=(35, y_offset + 15))
+            panel_surface.blit(self.icon_images['npc'], icon_rect)
+
+        npc_text = self.small_font.render("NPC", True, (255, 255, 255))
         panel_surface.blit(npc_text, (60, y_offset + 5))
         key_text = self.small_font.render("[N]", True, (255, 215, 0))
         panel_surface.blit(key_text, (self.panel_width - 70, y_offset + 5))
         y_offset += 40
 
         # Текущий объект | Current object
-        if not self.npc_mode and not self.player_start_mode:
-            current_text = self.font.render("Current object:", True, (255, 255, 255))
-            panel_surface.blit(current_text, (20, y_offset))
-            y_offset += 25
+        current_text = self.font.render("Current object:", True, (255, 255, 255))
+        panel_surface.blit(current_text, (20, y_offset))
+        y_offset += 25
 
-            color = self.colors[self.current_type]
-            pygame.draw.rect(panel_surface, color, (20, y_offset, 30, 30))
-            pygame.draw.rect(panel_surface, (255, 255, 255), (20, y_offset, 30, 30), 1)
+        if self.player_start_mode:
+            display_type = 'player_start'
+            display_name = "Player Start"
+            display_icon = self.icon_images.get('player_start')
+        elif self.npc_mode:
+            display_type = 'npc'
+            display_name = "NPC"
+            display_icon = self.icon_images.get('npc')
+        else:
+            display_type = self.current_type
+            display_name = self.current_type.capitalize()
+            display_icon = self.icon_images.get(self.current_type)
 
-            obj_text = self.font.render(f"{self.icons[self.current_type]} {self.current_type}", True, (255, 255, 255))
-            panel_surface.blit(obj_text, (60, y_offset + 5))
-            y_offset += 40
+        pygame.draw.rect(panel_surface, (40, 40, 40), (20, y_offset, 30, 30))
+        pygame.draw.rect(panel_surface, (100, 100, 100), (20, y_offset, 30, 30), 1)
+
+        if display_icon:
+            icon_rect = display_icon.get_rect(center=(35, y_offset + 15))
+            panel_surface.blit(display_icon, icon_rect)
+
+        obj_text = self.font.render(display_name, True, (255, 255, 255))
+        panel_surface.blit(obj_text, (60, y_offset + 5))
+        y_offset += 40
 
         # Координаты мыши | Mouse coordinates
         mouse_text = self.font.render("Mouse position:", True, (255, 255, 255))
@@ -419,15 +425,15 @@ class SimpleMapEditor:
         # Список объектов | Object list
         obj_list = [(k, v) for k, v in self.colors.items() if k not in ['npc', 'player_start']]
         for i, (obj_type, color) in enumerate(obj_list):
-            # Цветной индикатор | Color indicator
-            pygame.draw.rect(panel_surface, color, (20, y_offset + i * 25, 15, 15))
-            pygame.draw.rect(panel_surface, (255, 255, 255), (20, y_offset + i * 25, 15, 15), 1)
+            if obj_type in self.icon_images:
+                icon_rect = self.icon_images[obj_type].get_rect(topleft=(20, y_offset + i * 25))
+                panel_surface.blit(self.icon_images[obj_type], icon_rect)
 
             # Название объекта | Object name
             is_selected = obj_type == self.current_type and not self.npc_mode and not self.player_start_mode
-            obj_text = self.small_font.render(f"{self.icons[obj_type]} {obj_type}", True,
+            obj_text = self.small_font.render(obj_type, True,
                                               (255, 255, 255) if is_selected else (150, 150, 150))
-            panel_surface.blit(obj_text, (40, y_offset + i * 25))
+            panel_surface.blit(obj_text, (45, y_offset + i * 25))
 
             # Номер клавиши | Key number
             key_text = self.small_font.render(f"[{i + 1}]", True, (200, 200, 200))
@@ -442,35 +448,20 @@ class SimpleMapEditor:
         panel_surface.blit(hotkeys_title, (20, y_offset))
         y_offset += 20
 
-        hotkeys1 = [
+
+        hotkeys = [
             ("Left click", "Place"),
             ("Right click", "Delete"),
             ("Ctrl+Right", "Select"),
             ("Ctrl+LMB drag", "Rotate object"),
-            ("P", "Edit player start"),
-            ("N", "Toggle NPC mode"),
-        ]
-
-        for key, desc in hotkeys1:
-            key_text = self.small_font.render(key, True, (255, 215, 0))
-            panel_surface.blit(key_text, (30, y_offset))
-            desc_text = self.small_font.render(desc, True, (200, 200, 200))
-            panel_surface.blit(desc_text, (140, y_offset))
-            y_offset += 15
-
-        y_offset += 5
-
-        hotkeys2 = [
             ("G", "Toggle grid"),
             ("X", "Snap to grid"),
-            ("[/]", "Rotate selected -/+15°"),
             ("S", "Save"),
             ("L", "Load"),
             ("ESC", "Exit"),
-            ("↑/↓", "Scroll panel")
         ]
 
-        for key, desc in hotkeys2:
+        for key, desc in hotkeys:
             key_text = self.small_font.render(key, True, (255, 215, 0))
             panel_surface.blit(key_text, (30, y_offset))
             desc_text = self.small_font.render(desc, True, (200, 200, 200))
@@ -545,7 +536,7 @@ class SimpleMapEditor:
         """Вычисляет угол между двумя точками в градусах | Calculate angle between two points in degrees"""
         dx = p2[0] - p1[0]
         dy = p2[1] - p1[1]
-        return math.degrees(math.atan2(-dy, dx)) % 360  # минус для корректного отображения в pygame
+        return math.degrees(math.atan2(-dy, dx)) % 360
 
     def handle_events(self):
         """Обработка событий | Handle events"""
@@ -572,7 +563,6 @@ class SimpleMapEditor:
                     self.player_start_mode = not self.player_start_mode
                     self.npc_mode = False
                     self.rotation_mode = False
-                    # Сбрасываем выделение при переключении режима
                     self.selected_object = None
                     self.rotating_object = None
                     self.show_message(f"Player start mode: {'ON' if self.player_start_mode else 'OFF'}", 60)
@@ -580,34 +570,12 @@ class SimpleMapEditor:
                     self.npc_mode = not self.npc_mode
                     self.player_start_mode = False
                     self.rotation_mode = False
-                    # Сбрасываем выделение при переключении режима
                     self.selected_object = None
                     self.rotating_object = None
                     self.show_message(f"NPC Mode: {'ON' if self.npc_mode else 'OFF'}", 60)
                 elif event.key == pygame.K_r:
                     self.rotation_mode = not self.rotation_mode
                     self.show_message(f"Rotation mode: {'ON' if self.rotation_mode else 'OFF'}", 60)
-                elif event.key == pygame.K_LEFTBRACKET:  # [ - уменьшить поворот
-                    if self.selected_object:
-                        current_rot = self.selected_object.get('rot', 0)
-                        self.selected_object['rot'] = (current_rot - self.rotation_step) % 360
-                        self.show_message(f"Rotation: {self.selected_object['rot']}°", 30)
-                    elif self.player_start_mode:
-                        # Если в режиме старта и нет выделенного объекта, поворачиваем стартовую позицию
-                        current_rot = self.player_start.get('rot', 0)
-                        self.player_start['rot'] = (current_rot - self.rotation_step) % 360
-                        self.show_message(f"Player start rotation: {self.player_start['rot']}°", 30)
-                elif event.key == pygame.K_RIGHTBRACKET:  # ] - увеличить поворот
-                    if self.selected_object:
-                        current_rot = self.selected_object.get('rot', 0)
-                        self.selected_object['rot'] = (current_rot + self.rotation_step) % 360
-                        self.show_message(f"Rotation: {self.selected_object['rot']}°", 30)
-                    elif self.player_start_mode:
-                        # Если в режиме старта и нет выделенного объекта, поворачиваем стартовую позицию
-                        current_rot = self.player_start.get('rot', 0)
-                        self.player_start['rot'] = (current_rot + self.rotation_step) % 360
-                        self.show_message(f"Player start rotation: {self.player_start['rot']}°", 30)
-                # Клавиши 1-6 для выбора объектов
                 elif event.key == pygame.K_1:
                     if not self.npc_mode and not self.player_start_mode:
                         self.current_type = 'tree'
@@ -634,32 +602,22 @@ class SimpleMapEditor:
                         self.show_message(f"Selected: target", 30)
 
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                # Проверяем клики по кнопкам на панели | Check clicks on panel buttons
                 if event.pos[0] < self.panel_width:
-                    # Обработка кликов по кнопкам поворота будет добавлена позже
                     pass
-
-                # Проверяем, что клик был по области карты | Check if click was on map area
                 elif event.pos[0] > self.panel_width:
-                    if event.button == 1:  # Левая кнопка - разместить или повернуть | Left click - place or rotate
-                        # Проверяем, зажат ли Ctrl
+                    if event.button == 1:
                         if pygame.key.get_mods() & pygame.KMOD_CTRL:
-                            # Режим поворота - ищем объект под курсором
                             closest_obj = None
                             closest_dist = float('inf')
-
-                            # Собираем все объекты для поиска
                             all_items = self.objects + self.npcs
 
-                            # Проверяем расстояние до каждого объекта
                             for obj in all_items:
                                 dist = ((obj['x'] - self.mouse_world_x) ** 2 +
                                         (obj['z'] - self.mouse_world_z) ** 2) ** 0.5
-                                if dist < closest_dist and dist < 3.0:  # Радиус захвата 3.0
+                                if dist < closest_dist and dist < 3.0:
                                     closest_dist = dist
                                     closest_obj = obj
 
-                            # Также проверяем стартовую позицию игрока, если она видима
                             if self.show_player_start:
                                 dist_to_player = ((self.player_start['x'] - self.mouse_world_x) ** 2 +
                                                   (self.player_start['z'] - self.mouse_world_z) ** 2) ** 0.5
@@ -668,10 +626,8 @@ class SimpleMapEditor:
                                     closest_obj = self.player_start
 
                             if closest_obj:
-                                # Начинаем поворот объекта
                                 self.rotating_object = closest_obj
                                 self.selected_object = closest_obj if closest_obj != self.player_start else None
-                                # Получаем экранные координаты для вычисления угла
                                 screen_x, screen_y = self.world_to_screen(closest_obj['x'], closest_obj['z'])
                                 self.rotation_start_mouse = (event.pos[0], event.pos[1])
                                 self.rotation_start_angle = self.get_angle_between_points(
@@ -682,19 +638,12 @@ class SimpleMapEditor:
                                     'type', 'object')
                                 self.show_message(f"Rotating {obj_type}", 30)
                         else:
-                            # Обычное размещение
                             if self.player_start_mode:
-                                # Устанавливаем стартовую позицию игрока | Set player start position
                                 self.player_start['x'] = self.mouse_world_x
                                 self.player_start['z'] = self.mouse_world_z
-                                # Сбрасываем выделение
                                 self.selected_object = None
                                 self.rotating_object = None
-                                self.player_start_mode = False
-                                self.show_message(
-                                    f"🚩 Player start set to ({self.mouse_world_x:.1f}, {self.mouse_world_z:.1f})", 60)
                             elif self.npc_mode:
-                                # Размещаем NPC | Place NPC
                                 self.npcs.append({
                                     'type': 'npc',
                                     'x': self.mouse_world_x,
@@ -705,10 +654,7 @@ class SimpleMapEditor:
                                 })
                                 self.selected_object = None
                                 self.rotating_object = None
-                                self.npc_mode = False
-                                self.show_message("👤 NPC placed", 30)
                             else:
-                                # Размещаем обычный объект | Place regular object
                                 occupied = False
                                 for obj in self.objects:
                                     dist = ((obj['x'] - self.mouse_world_x) ** 2 +
@@ -729,14 +675,11 @@ class SimpleMapEditor:
                                     self.selected_object = None
                                     self.rotating_object = None
 
-                    elif event.button == 3:  # Правая кнопка - удалить/выделить | Right click - delete/select
-                        # Ищем ближайший объект среди обычных объектов, NPC и стартовой позиции
-                        # Find closest object among regular objects, NPCs and player start
+                    elif event.button == 3:
                         closest_obj = None
                         closest_dist = float('inf')
                         all_items = self.objects + self.npcs
 
-                        # Добавляем стартовую позицию в поиск
                         if self.show_player_start:
                             all_items_with_start = all_items + [self.player_start]
                         else:
@@ -750,21 +693,18 @@ class SimpleMapEditor:
                                 closest_obj = obj
 
                         if closest_obj:
-                            if pygame.key.get_mods() & pygame.KMOD_CTRL:  # Ctrl + клик - выделить | Ctrl+click - select
+                            if pygame.key.get_mods() & pygame.KMOD_CTRL:
                                 if closest_obj == self.player_start:
-                                    # Выделяем стартовую позицию
                                     self.selected_object = None
                                     self.player_start_mode = True
-                                    self.npc_mode = False
                                     self.show_message(f"Selected: player start, rot: {closest_obj.get('rot', 0)}°", 60)
                                 else:
                                     self.selected_object = closest_obj
                                     self.player_start_mode = False
                                     obj_type = closest_obj.get('type', 'npc')
                                     self.show_message(f"Selected: {obj_type}, rot: {closest_obj.get('rot', 0)}°", 60)
-                            else:  # Просто правый клик - удалить | Just right click - delete
+                            else:
                                 if closest_obj == self.player_start:
-                                    # Не удаляем стартовую позицию, только сбрасываем на центр
                                     self.player_start['x'] = 0
                                     self.player_start['z'] = 0
                                     self.player_start['rot'] = 0
@@ -785,13 +725,11 @@ class SimpleMapEditor:
 
             elif event.type == pygame.MOUSEBUTTONUP:
                 if event.button == 1 and self.rotating_object:
-                    # Завершаем поворот
                     self.rotating_object = None
                     self.show_message("Rotation finished", 30)
 
             elif event.type == pygame.MOUSEMOTION:
                 if self.rotating_object and (pygame.key.get_mods() & pygame.KMOD_CTRL):
-                    # Поворачиваем объект при движении мыши с зажатым Ctrl
                     screen_x, screen_y = self.world_to_screen(
                         self.rotating_object['x'],
                         self.rotating_object['z']
@@ -802,60 +740,69 @@ class SimpleMapEditor:
                         current_mouse
                     )
 
-                    # Вычисляем разницу углов
                     angle_diff = current_angle - self.rotation_start_angle
                     self.rotation_start_angle = current_angle
 
-                    # Применяем поворот
                     if self.rotating_object == self.player_start:
-                        self.player_start['rot'] = (self.player_start.get('rot', 0) + angle_diff) % 360
+                        self.player_start['rot'] = int((self.player_start.get('rot', 0) + angle_diff) % 360)
                     else:
                         current_rot = self.rotating_object.get('rot', 0)
-                        self.rotating_object['rot'] = (current_rot + angle_diff) % 360
+                        self.rotating_object['rot'] = int((current_rot + angle_diff) % 360)
 
     def run(self):
         """Главный цикл | Main loop"""
         while self.running:
-            # Получаем позицию мыши | Get mouse position
             mouse_x, mouse_y = pygame.mouse.get_pos()
             self.mouse_world_x, self.mouse_world_z = self.screen_to_world(mouse_x, mouse_y)
 
-            # Обработка событий | Handle events
             self.handle_events()
 
-            # Отрисовка | Drawing
-            self.screen.fill((50, 50, 50))  # Темно-серый фон | Dark gray background
+            self.screen.fill((50, 50, 50))
 
-            # Фон карты (светлее, чтобы выделялась) | Map background (lighter to stand out)
+            map_left = self.panel_width + self.map_offset
+            map_top = self.map_offset
+            map_height = self.screen_height - self.map_offset * 2
             pygame.draw.rect(self.screen, (60, 60, 60),
-                             (self.panel_width, 0, self.map_width, self.screen_height))
+                             (map_left, map_top, self.map_width, map_height))
 
             self.draw_grid()
             self.draw_objects()
             self.draw_info_panel()
 
-            # Маркер мыши (только если мышь над картой) | Mouse marker (only if mouse over map)
-            if mouse_x > self.panel_width:
+            map_left = self.panel_width + self.map_offset
+            map_right = map_left + self.map_width
+            map_top = self.map_offset
+            map_bottom = self.screen_height - self.map_offset
+
+            if mouse_x > map_left and mouse_x < map_right and mouse_y > map_top and mouse_y < map_bottom:
                 screen_x, screen_y = self.world_to_screen(self.mouse_world_x, self.mouse_world_z)
 
-                # Разный цвет маркера в зависимости от режима | Different marker color based on mode
                 if self.player_start_mode:
-                    marker_color = (0, 255, 255)  # Голубой для старта игрока | Cyan for player start
+                    marker_color = (0, 255, 255)
                 elif self.npc_mode:
-                    marker_color = (255, 0, 0)  # Красный для NPC | Red for NPC
+                    marker_color = (255, 0, 0)
                 elif self.rotating_object:
-                    marker_color = (255, 255, 0)  # Желтый при повороте | Yellow during rotation
+                    marker_color = (255, 255, 0)
                 elif pygame.key.get_mods() & pygame.KMOD_CTRL:
-                    marker_color = (255, 255, 0)  # Желтый при зажатом Ctrl | Yellow when Ctrl is pressed
+                    marker_color = (255, 255, 0)
                 else:
-                    marker_color = (255, 255, 255)  # Белый для объектов | White for objects
+                    marker_color = (255, 255, 255)
 
                 pygame.draw.circle(self.screen, marker_color, (screen_x, screen_y), 8, 2)
 
-                # Координаты рядом с курсором | Coordinates near cursor
                 coord_text = self.small_font.render(f"{self.mouse_world_x:.1f}, {self.mouse_world_z:.1f}",
                                                     True, (255, 255, 255))
-                self.screen.blit(coord_text, (screen_x + 15, screen_y - 10))
+                text_width = coord_text.get_width()
+
+                if screen_x + 15 + text_width > map_right:
+                    text_x = screen_x - 15 - text_width
+                else:
+                    text_x = screen_x + 15
+
+                if text_x < map_left:
+                    text_x = map_left + 5
+
+                self.screen.blit(coord_text, (text_x, screen_y - 10))
 
             pygame.display.flip()
             self.clock.tick(60)
@@ -864,5 +811,5 @@ class SimpleMapEditor:
 
 
 if __name__ == "__main__":
-    editor = SimpleMapEditor()
+    editor =MapEditor()
     editor.run()
