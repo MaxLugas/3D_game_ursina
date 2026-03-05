@@ -71,6 +71,7 @@ class MapEditor:
         }
 
         self.icon_images = {}
+        self.icon_images_large = {}
         self.load_icon_images()
 
         # Шрифты | Fonts
@@ -117,7 +118,10 @@ class MapEditor:
                 if icon_path.exists():
                     # Загружаем иконку | Load icon
                     icon = pygame.image.load(str(icon_path)).convert_alpha()
-                    self.icon_images[icon_type] = pygame.transform.scale(icon, (24, 24))
+                    # Иконки для бокового меню | Icons for menu
+                    self.icon_images[icon_type] = pygame.transform.scale(icon, (18, 18))
+                    # Иконки для карты | Icons for map
+                    self.icon_images_large[icon_type] = pygame.transform.scale(icon, (24, 24))
                     loaded_count += 1
                     print(f"Загружена иконка | Icon loaded: {icon_type}.png")
                 else:
@@ -194,9 +198,9 @@ class MapEditor:
         if self.show_player_start:
             screen_x, screen_y = self.world_to_screen(self.player_start['x'], self.player_start['z'])
 
-            if 'player_start' in self.icon_images:
-                icon_rect = self.icon_images['player_start'].get_rect(center=(screen_x, screen_y - 2))
-                self.screen.blit(self.icon_images['player_start'], icon_rect)
+            if 'player_start' in self.icon_images_large:
+                icon_rect = self.icon_images_large['player_start'].get_rect(center=(screen_x, screen_y - 3))
+                self.screen.blit(self.icon_images_large['player_start'], icon_rect)
 
             # Рисуем направление взгляда игрока | Draw player view direction
             rot = self.player_start.get('rot', 0)
@@ -224,8 +228,8 @@ class MapEditor:
                     self.screen.blit(rot_text, (screen_x + 25, screen_y - 15))
 
             # Проверяем, есть ли PNG иконка для объекта | Check PNG icon for object
-            if obj['type'] in self.icon_images:
-                self.screen.blit(self.icon_images[obj['type']], (screen_x - 10, screen_y - 10))
+            if obj['type'] in self.icon_images_large:
+                self.screen.blit(self.icon_images_large[obj['type']], (screen_x - 16, screen_y - 16))
 
                 if 'rot' in obj and obj['rot'] != 0:
                     rot = obj.get('rot', 0)
@@ -253,8 +257,8 @@ class MapEditor:
             if self.selected_object == npc or self.rotating_object == npc:
                 pygame.draw.circle(self.screen, (255, 255, 0), (screen_x, screen_y), 20, 3)
 
-            if 'npc' in self.icon_images:
-                self.screen.blit(self.icon_images['npc'], (screen_x - 10, screen_y - 10))
+            if 'npc' in self.icon_images_large:
+                self.screen.blit(self.icon_images_large['npc'], (screen_x - 16, screen_y - 16))
             else:
                 pygame.draw.rect(self.screen, (255, 0, 0), (screen_x - 12, screen_y - 12, 24, 24))
                 pygame.draw.rect(self.screen, (255, 255, 255), (screen_x - 12, screen_y - 12, 24, 24), 2)
@@ -280,7 +284,7 @@ class MapEditor:
         y_offset = 20
 
         # Заголовок | Title
-        title = self.big_font.render("MAP EDITOR", True, (255, 215, 0))
+        title = self.big_font.render("INFO", True, (255, 215, 0))
         panel_surface.blit(title, (20, y_offset))
         y_offset += 40
 
@@ -291,7 +295,6 @@ class MapEditor:
         # Информация о карте | Map information
         info_items = [
             f"Map size: {self.map_size}x{self.map_size}",
-            f"Grid: {self.grid_size}x{self.grid_size}",
             f"Cell: {self.cell_size:.1f}",
             f"Objects: {len(self.objects)}",
             f"NPCs: {len(self.npcs)}",
