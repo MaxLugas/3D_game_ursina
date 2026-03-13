@@ -10,7 +10,8 @@ from src.core.config import (
     ROCK_COLOR, TREE_COLOR, COTTAGE_COLOR, FLASHLIGHT_COLOR,
     STATUE_COLOR, TARGET_COLOR, SPECULAR_FACTOR,
     NPC_SPEED_WALK, NPC_SPEED_RUN_1, MODELS_DIR,
-    NPC_IDLE_ANIM, NPC_WALK_ANIM, NPC_RUN_ANIM_1, NPC_SKILL_ANIM, NPC_SCALE
+    NPC_IDLE_ANIM, NPC_WALK_ANIM, NPC_RUN_ANIM_1, NPC_SKILL_ANIM, NPC_SCALE, NPC_SKILL_SOUND, NPC_WALK_SOUND,
+    NPC_ATTACK_1_SOUND
 )
 
 statue_triggers = []
@@ -230,7 +231,10 @@ def load_map(filename='map.json', player=None, load_npcs=True, verbose=True):
                         skill_anim=NPC_SKILL_ANIM,
                         scale=npc_data.get("scale", NPC_SCALE),
                         speed_walk=NPC_SPEED_WALK,
-                        speed_run_1=NPC_SPEED_RUN_1
+                        speed_run_1=NPC_SPEED_RUN_1,
+                        skill_sound=NPC_SKILL_SOUND,
+                        walk_sound=NPC_WALK_SOUND,
+                        attack_sound_1=NPC_ATTACK_1_SOUND
                     )
                     npcs.append(npc)
                     world_entities.append(npc)
