@@ -39,6 +39,12 @@ NPC_ATTACK_DISTANCE = 10                                # Дистанция н�
 NPC_MIN_CHASE_DISTANCE = 2.0
 NPC_ATTACK_TRIGGER_DISTANCE = 2.0
 
+# Звуки NPC | NPC sounds
+NPC_SKILL_SOUND = 'Berserker_Call_2'
+NPC_SKILL_SOUND_PITCH=2.27
+NPC_WALK_SOUND='Walking'
+NPC_ATTACK_1_SOUND='Attack_1'
+
 # Анимации NPC | NPC animations
 NPC_IDLE_ANIM = 'Idle'                                  # Анимация бездействия | Idle animation
 NPC_WALK_ANIM = 'Walking'                               # Анимация ходьбы | Walking animation
