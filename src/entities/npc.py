@@ -8,8 +8,8 @@ from collections import deque
 from src.core.config import (
     NPC_SPEED_WALK, NPC_SPEED_RUN_1, NPC_ATTACK_DISTANCE, NPC_IDLE_DISTANCE, NPC_ATTACK_TRIGGER_DISTANCE,
     MODELS_DIR, COLLIDER_SHRINK_FACTOR, NPC_MIN_CHASE_DISTANCE, NPC_WALK_ANIM, NPC_RUN_ANIM_1, NPC_SKILL_ANIM,
-    NPC_IDLE_ANIM, NPC_ATTACK_ANIM_1, NPC_RUN_ANIM_2, NPC_SPEED_RUN_2
-
+    NPC_IDLE_ANIM, NPC_ATTACK_ANIM_1, NPC_RUN_ANIM_2, NPC_SPEED_RUN_2, NPC_SKILL_SOUND, NPC_SKILL_SOUND_PITCH,
+    NPC_WALK_SOUND, NPC_ATTACK_1_SOUND
 )
 from src.shaders.comics_shader import npc_shader_panda
 from src.utils.object_setup import setup_collidable_object
@@ -20,7 +20,7 @@ class AnimatedNPC:
                  idle_anim=NPC_IDLE_ANIM, walk_anim=NPC_WALK_ANIM, run_anim_1=NPC_RUN_ANIM_1, run_anim_2=NPC_RUN_ANIM_2,
                  skill_anim=NPC_SKILL_ANIM, attack_anim_1=NPC_ATTACK_ANIM_1, fix_orientation=True, scale=2.0,
                  speed_walk=NPC_SPEED_WALK, speed_run_1=NPC_SPEED_RUN_1, speed_run_2=NPC_SPEED_RUN_2,
-                 shrink_factor=COLLIDER_SHRINK_FACTOR):
+                 shrink_factor=COLLIDER_SHRINK_FACTOR, skill_sound=NPC_SKILL_SOUND, walk_sound=NPC_WALK_SOUND, attack_sound_1=NPC_ATTACK_1_SOUND):
 
         self.player = player
         self.speed_walk = speed_walk
@@ -37,6 +37,34 @@ class AnimatedNPC:
         self.talked = False
 
         self.skill_used = False
+
+        # === Звуки | Sounds ===
+        self.skill_sound_path = skill_sound
+        self.skill_sound = None
+        self.skill_sound_played = False
+
+        self.walk_sound_path = walk_sound
+        self.walk_sound = None
+        self.last_walk_sound_time = 0
+        self.walk_sound_interval = 0.55
+
+        self.last_run_1_sound_time = 0
+        self.run_1_sound_interval = 0.45
+
+        self.last_run_2_sound_time = 0
+        self.run_2_sound_interval = 0.35
+
+        self.attack_sound_path = attack_sound_1
+        self.attack_sound = None
+        self.attack_sound_played = False
+
+        if self.skill_sound_path:
+            self._load_sound(self.skill_sound_path, 'skill_sound', 'skill', 0.8)
+
+        if self.walk_sound_path:
+            self._load_sound(self.walk_sound_path, 'walk_sound', 'walk', 0.4)
+        if self.attack_sound_path:
+            self._load_sound(self.attack_sound_path, 'attack_sound', 'attack', 0.9)
 
         # === Память препятствий | Obstacle memory===
         self.obstacle_memory = {}  # Словарь: позиция -> время запоминания | Dictionary: position -> memorization time
@@ -96,6 +124,60 @@ class AnimatedNPC:
         self._create_collider()
 
         print(f"✅ NPC создан в позиции {start_pos} | NPC created at position {start_pos}")
+
+    def _load_sound(self, sound_path, sound_attr, sound_type="sound", volume=0.5):
+        if not sound_path:
+            return None
+
+        try:
+            sound_name = str(sound_path)
+            sound_obj = Audio(
+                sound_name,
+                autoplay=False,
+                volume=volume,
+                loop=False
+            )
+            setattr(self, sound_attr, sound_obj)
+            return sound_obj
+        except Exception as e:
+            print(f"  ⚠️ Ошибка загрузки звука для {sound_type}: | Load audio error for {sound_type}: {e}")
+            setattr(self, sound_attr, None)
+            return None
+
+    def _play_sound(self, sound_attr, sound_type="sound", pitch=1.0, use_interval=False, played_flag=None,interval=0.5):
+        sound = getattr(self, sound_attr, None)
+        if not sound:
+            return False
+
+        current_time = time.time()
+
+        # Для однократного воспроизведения (как skill) | For one-time playback (like skill)
+        if played_flag:
+            played = getattr(self, played_flag, False)
+            if played:
+                return False
+
+            sound.pitch = pitch
+            sound.play()
+            setattr(self, played_flag, True)
+            return True
+
+        # Для циклического воспроизведения с интервалом (как walk) | For interval-based playback (like walk)
+        elif use_interval:
+            last_time_attr = f"last_{sound_attr}_time"
+            last_time = getattr(self, last_time_attr, 0)
+
+            if current_time - last_time >= interval:
+                sound.pitch = pitch
+                sound.play()
+                setattr(self, last_time_attr, current_time)
+                return True
+
+        return False
+
+    def _stop_walk_sound(self):
+        """Остановка звука шагов | Stop walking sound"""
+        pass
 
     def _create_collider(self):
         """Создание коллайдера для NPC | Create collider for NPC"""
@@ -475,6 +557,7 @@ class AnimatedNPC:
         distance_to_player = (npc_pos - player_pos).length()
 
         current_anim = self.actor.getCurrentAnim()
+        previous_state = self.state
 
         # Всегда поворачиваться к игроку, если он близко | Always face the player when close
         if distance_to_player < NPC_IDLE_DISTANCE:
@@ -506,17 +589,16 @@ class AnimatedNPC:
             else:
                 # Идти к игроку| Walk toward player
                 self._move_toward(player_pos, self.speed_walk)
+                # Воспроизводим звук шагов при ходьбе | Play walking sound when walking
+                self._play_sound('walk_sound', 'walk', use_interval=True, interval=self.walk_sound_interval)
 
         elif self.state == self.skill_anim:
+            self._play_sound('skill_sound', 'skill', pitch=NPC_SKILL_SOUND_PITCH, played_flag='skill_sound_played')
             if current_anim != self.skill_anim:
                 self.skill_used = True
                 self.state = self.run_anim_1
                 if self.run_anim_1 in self.actor.get_anim_names():
                     self.actor.loop(self.run_anim_1)
-            elif distance_to_player >= NPC_IDLE_DISTANCE:
-                self.state = self.idle_anim
-                if self.idle_anim in self.actor.get_anim_names():
-                    self.actor.loop(self.idle_anim)
 
         elif self.state == self.run_anim_1:
             if distance_to_player < NPC_ATTACK_TRIGGER_DISTANCE:
@@ -530,6 +612,13 @@ class AnimatedNPC:
             else:
                 # Бежать к игроку со скоростью run_1 | Run to player with run_1
                 self._move_toward(player_pos, self.speed_run_1)
+
+                original_volume = self.walk_sound.volume if self.walk_sound else 0.4
+                if self.walk_sound:
+                    self.walk_sound.volume = 0.7
+                self._play_sound('walk_sound', 'run_1', use_interval=True, interval=self.run_1_sound_interval)
+                if self.walk_sound:
+                    self.walk_sound.volume = original_volume
 
         # === Вторая анимация бега с увеличенной скоростью | Second run animation ===
         elif self.state == self.run_anim_2:
@@ -545,8 +634,22 @@ class AnimatedNPC:
                 # Бежать к игроку с увеличенной скоростью run_2 | Run to player with run_2
                 self._move_toward(player_pos, self.speed_run_2)
 
+                original_volume = self.walk_sound.volume if self.walk_sound else 0.4
+                if self.walk_sound:
+                    self.walk_sound.volume = 0.8
+                self._play_sound('walk_sound', 'run_2', use_interval=True, interval=self.run_2_sound_interval)
+                if self.walk_sound:
+                    self.walk_sound.volume = original_volume
+
+
         elif self.state == self.attack_anim_1:
+
+            # Воспроизводим звук один раз за анимацию
+
+            self._play_sound('attack_sound', 'attack', played_flag='attack_sound_played')
+
             if current_anim != self.attack_anim_1:
+                self.attack_sound_played = False
                 if distance_to_player < NPC_IDLE_DISTANCE:
                     if self.skill_used:
                         self.state = self.run_anim_2
@@ -593,3 +696,4 @@ class AnimatedNPC:
         Reset skill usage flag (if needed)
         """
         self.skill_used = False
+        self.skill_sound_played = False
