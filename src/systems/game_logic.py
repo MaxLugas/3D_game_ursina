@@ -3,20 +3,12 @@ from src.core.config import MAP_HALF_SIZE
 
 
 class GameLogic:
-    def __init__(self, player, npcs, statue_triggers, world_entities):
+    def __init__(self, player, npcs, world_entities):
         self.player = player
         self.npcs = npcs
-        self.statue_triggers = statue_triggers
         self.world_entities = world_entities
         self.base_speed = player.speed
         self.map_half_size = MAP_HALF_SIZE
-
-    def remove_statue(self, statue):
-        if statue in self.statue_triggers:
-            destroy(statue)
-            self.statue_triggers.remove(statue)
-            if statue in self.world_entities:
-                self.world_entities.remove(statue)
 
 
     def update(self):

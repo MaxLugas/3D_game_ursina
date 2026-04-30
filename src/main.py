@@ -26,7 +26,7 @@ def main():
     app = init_engine()
 
     # Читаем стартовую позицию игрока напрямую из JSON | Read player start position directly from JSON
-    filepath = ASSETS_DIR / 'map_orig.json'
+    filepath = ASSETS_DIR / 'map.json'
     try:
         with open(filepath, 'r', encoding='utf-8') as f:
             data = json_module.load(f)
@@ -53,13 +53,12 @@ def main():
     weapon = FPSWeapon(model_path=GLOCK_WEAPON_MODEL, scale=GLOCK_WEAPON_SCALE)
 
     # Загружаем карту один раз с созданным игроком | Load map once with created player
-    world_entities, statue_triggers_list, npcs_from_map, _ = load_map('map_orig.json', player=player, load_npcs=True)
+    world_entities, npcs_from_map, _ = load_map('map.json', player=player, load_npcs=True)
 
     # Инициализация игровой логики | Initialize game logic
     game_logic = GameLogic(
         player=player,
         npcs=npcs_from_map,
-        statue_triggers=statue_triggers_list,
         world_entities=world_entities
     )
 
