@@ -14,10 +14,9 @@ from src.core.config import (
     NPC_ATTACK_1_SOUND
 )
 
-statue_triggers = []
 
 
-def load_map(filename='map.json', player=None, load_npcs=True, verbose=True):
+def load_map(filename='map_orig.json', player=None, load_npcs=True, verbose=True):
     """
     Загрузка карты из JSON файла
     Load map from JSON file
@@ -27,10 +26,9 @@ def load_map(filename='map.json', player=None, load_npcs=True, verbose=True):
         player (Entity): ссылка на игрока (для NPC) | reference to player (for NPCs)
 
     Возвращает | Returns:
-        tuple: (world_entities, statue_triggers, npcs, player_start) - списки объектов, триггеров, NPC и стартовая позиция игрока
+        tuple: (world_entities, npcs, player_start) - списки объектов, NPC и стартовая позиция игрока
     """
     world_entities = []  # Список всех созданных игровых объектов | List of all created game entities
-    statue_triggers = []  # Локальный список триггеров для статуй | Local list of statue triggers
     npcs = []  # Список созданных NPC | List of created NPCs
     player_start = {'x': 0, 'z': 0, 'y': 1.0}  # Стартовая позиция по умолчанию | Default player start position
 
@@ -44,11 +42,11 @@ def load_map(filename='map.json', player=None, load_npcs=True, verbose=True):
         if verbose:
             print(
                 f"❌ Файл {filepath} не найден. Используются настройки по умолчанию. | File {filepath} not found. Using default settings.")
-        return world_entities, statue_triggers, npcs, player_start
+        return world_entities, npcs, player_start
     except json.JSONDecodeError as e:
         if verbose:
             print(f"❌ Ошибка парсинга JSON: {e} | JSON parsing error: {e}")
-        return world_entities, statue_triggers, npcs, player_start
+        return world_entities, npcs, player_start
 
     # === Загрузка стартовой позиции игрока | Load player start position ===
     player_start_data = data.get("player_start", {})
@@ -180,25 +178,17 @@ def load_map(filename='map.json', player=None, load_npcs=True, verbose=True):
                 texture='statue',
                 scale=0.5,
                 position=(x, 0.5, z),
-                rotation=(0, rot, 0),  # Добавлен поворот по Y
+                rotation=(0, rot, 0),
                 shader=comics_shaders,
-                color=STATUE_COLOR,
-                enabled=False
+                color=STATUE_COLOR
             )
+
             statue.color = statue.color.tint(0.2)
             statue.set_shader_input("specular_factor", SPECULAR_FACTOR)
-            statue.collider = None
 
-            trigger = Entity(
-                position=statue.position,
-                scale=Vec3(1, 1, 1),
-                collider='box',
-                visible=False
-            )
-            trigger.visual = statue
-            statue_triggers.append(trigger)
+            statue.collider = 'box'
+            statue.is_statue = True
 
-            invoke(setup_collidable_object, statue, shrink_factor=STATUE_COLLIDER_SHRINK, delay=0)
             world_entities.append(statue)
     if verbose:
         print(f"✅ Создано {len(world_entities)} объектов | Created {len(world_entities)} objects")
@@ -247,6 +237,6 @@ def load_map(filename='map.json', player=None, load_npcs=True, verbose=True):
                     print(f"  ❌ Ошибка загрузки NPC {i}: {e} | Error loading NPC {i}: {e}")
     if verbose:
         print(
-            f"📊 Итого: {len(world_entities)} объектов, {len(statue_triggers)} триггеров, {len(npcs)} NPC | Total: {len(world_entities)} objects, {len(statue_triggers)} triggers, {len(npcs)} NPCs")
+            f"📊 Итого: {len(world_entities)} объектов, {len(npcs)} NPC | Total: {len(world_entities)} objects, {len(npcs)} NPCs")
 
-    return world_entities, statue_triggers, npcs, player_start
+    return world_entities, npcs, player_start

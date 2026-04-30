@@ -3,23 +3,12 @@ from src.core.config import MAP_HALF_SIZE
 
 
 class GameLogic:
-    def __init__(self, player, npcs, statue_triggers, world_entities):
+    def __init__(self, player, npcs, world_entities):
         self.player = player
         self.npcs = npcs
-        self.statue_triggers = statue_triggers
         self.world_entities = world_entities
         self.base_speed = player.speed
         self.map_half_size = MAP_HALF_SIZE
-
-    def remove_statue(self, trigger):
-        """Удаляет статую и её триггер из игры и списков. | Remove statue and its trigger from game and lists."""
-        if trigger in self.statue_triggers:
-            visual = trigger.visual
-            destroy(visual)      # Уничтожаем визуальную модель | Destroy visual model
-            destroy(trigger)     # Уничтожаем триггер | Destroy trigger
-            self.statue_triggers.remove(trigger)
-            if visual in self.world_entities:
-                self.world_entities.remove(visual)
 
 
     def update(self):
