@@ -17,7 +17,7 @@ from src.core.config import (
 statue_triggers = []
 
 
-def load_map(filename='map.json', player=None, load_npcs=True, verbose=True):
+def load_map(filename='map_orig.json', player=None, load_npcs=True, verbose=True):
     """
     Загрузка карты из JSON файла
     Load map from JSON file
@@ -180,25 +180,18 @@ def load_map(filename='map.json', player=None, load_npcs=True, verbose=True):
                 texture='statue',
                 scale=0.5,
                 position=(x, 0.5, z),
-                rotation=(0, rot, 0),  # Добавлен поворот по Y
+                rotation=(0, rot, 0),
                 shader=comics_shaders,
-                color=STATUE_COLOR,
-                enabled=False
+                color=STATUE_COLOR
             )
+
             statue.color = statue.color.tint(0.2)
             statue.set_shader_input("specular_factor", SPECULAR_FACTOR)
-            statue.collider = None
 
-            trigger = Entity(
-                position=statue.position,
-                scale=Vec3(1, 1, 1),
-                collider='box',
-                visible=False
-            )
-            trigger.visual = statue
-            statue_triggers.append(trigger)
+            # ВАЖНО
+            statue.collider = 'box'
+            statue.is_statue = True
 
-            invoke(setup_collidable_object, statue, shrink_factor=STATUE_COLLIDER_SHRINK, delay=0)
             world_entities.append(statue)
     if verbose:
         print(f"✅ Создано {len(world_entities)} объектов | Created {len(world_entities)} objects")

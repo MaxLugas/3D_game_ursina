@@ -11,15 +11,12 @@ class GameLogic:
         self.base_speed = player.speed
         self.map_half_size = MAP_HALF_SIZE
 
-    def remove_statue(self, trigger):
-        """Удаляет статую и её триггер из игры и списков. | Remove statue and its trigger from game and lists."""
-        if trigger in self.statue_triggers:
-            visual = trigger.visual
-            destroy(visual)      # Уничтожаем визуальную модель | Destroy visual model
-            destroy(trigger)     # Уничтожаем триггер | Destroy trigger
-            self.statue_triggers.remove(trigger)
-            if visual in self.world_entities:
-                self.world_entities.remove(visual)
+    def remove_statue(self, statue):
+        if statue in self.statue_triggers:
+            destroy(statue)
+            self.statue_triggers.remove(statue)
+            if statue in self.world_entities:
+                self.world_entities.remove(statue)
 
 
     def update(self):
