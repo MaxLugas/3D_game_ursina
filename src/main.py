@@ -9,10 +9,11 @@ from src.systems.map_loader import load_map
 from src.systems.game_logic import GameLogic
 from src.entities.player import create_player
 from ursina import *
+import json as json_module
 from src.systems.minimap import Minimap
 from src.entities.weapon import FPSWeapon
 from src.core.config import PLAYER_SPEED, PLAYER_SECOND_JUMP_HEIGHT, MAP_HALF_SIZE, PLAYER_GRAVITY, \
-    PLAYER_MOUSE_SENSITIVITY, GLOCK_WEAPON_MODEL, GLOCK_WEAPON_SCALE
+    PLAYER_MOUSE_SENSITIVITY, GLOCK_WEAPON_MODEL, GLOCK_WEAPON_SCALE, ASSETS_DIR
 
 game_logic = None
 player = None
@@ -24,8 +25,20 @@ def main():
     global game_logic, player, minimap, weapon
     app = init_engine()
 
-    # Сначала загружаем метаданные и стартовую позицию игрока | First load metadata and player start position
-    world_entities, statue_triggers_list, _, player_start = load_map('map.json', player=None, load_npcs=False, verbose=False)
+    # Читаем стартовую позицию игрока напрямую из JSON | Read player start position directly from JSON
+    filepath = ASSETS_DIR / 'map_orig.json'
+    try:
+        with open(filepath, 'r', encoding='utf-8') as f:
+            data = json_module.load(f)
+        player_start_data = data.get("player_start", {})
+        player_start = {
+            'x': float(player_start_data.get('x', 0)),
+            'y': float(player_start_data.get('y', 1.0)),
+            'z': float(player_start_data.get('z', 0)),
+            'rot': float(player_start_data.get('rot', 0))
+        }
+    except (FileNotFoundError, json_module.JSONDecodeError):
+        player_start = {'x': 0, 'y': 1.0, 'z': 0, 'rot': 0}
 
     player = create_player(
         speed=PLAYER_SPEED,
@@ -33,14 +46,14 @@ def main():
         gravity=PLAYER_GRAVITY,
         mouse_sensitivity=PLAYER_MOUSE_SENSITIVITY,
         position=(player_start['x'], player_start['y'], player_start['z']),
-        rotation_y=player_start.get('rot', 0)
+        rotation_y=player_start['rot']
     )
 
     # Инициализация оружия от первого лица | Initialize first-person weapon
     weapon = FPSWeapon(model_path=GLOCK_WEAPON_MODEL, scale=GLOCK_WEAPON_SCALE)
 
-    # Теперь загружаем всё остальное с созданным игроком | Now load everything else with created player
-    world_entities, statue_triggers_list, npcs_from_map, _ = load_map('map.json', player=player, load_npcs=True)
+    # Загружаем карту один раз с созданным игроком | Load map once with created player
+    world_entities, statue_triggers_list, npcs_from_map, _ = load_map('map_orig.json', player=player, load_npcs=True)
 
     # Инициализация игровой логики | Initialize game logic
     game_logic = GameLogic(
@@ -85,9 +98,8 @@ def input(key):
             ignore=(player,)
         )
 
-        # Проверка попадания в триггер статуи | Check hit on statue trigger
-        if hit_info.hit and hit_info.entity in game_logic.statue_triggers:
-            game_logic.remove_statue(hit_info.entity)
+        if hit_info.hit and getattr(hit_info.entity, 'is_statue', False):
+            destroy(hit_info.entity)
 
             # Визуальная обратная связь | Visual feedback
             msg = Text(
