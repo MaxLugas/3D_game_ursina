@@ -455,7 +455,6 @@ class MapEditor:
         hotkeys = [
             ("Left click", "Place"),
             ("Right click", "Delete"),
-            ("Ctrl+Right", "Select"),
             ("Ctrl+LMB drag", "Rotate object"),
             ("G", "Toggle grid"),
             ("X", "Snap to grid"),
@@ -552,33 +551,30 @@ class MapEditor:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     self.running = False
-                elif event.key == pygame.K_s:
+                elif event.scancode == 22:
                     self.save_map()
-                elif event.key == pygame.K_l:
+                elif event.scancode == 15:
                     self.load_map()
-                elif event.key == pygame.K_g:
+                elif event.scancode == 10:
                     self.show_grid = not self.show_grid
                     self.show_message(f"Grid: {'ON' if self.show_grid else 'OFF'}", 60)
-                elif event.key == pygame.K_x:
+                elif event.scancode == 27:
                     self.snap_to_grid = not self.snap_to_grid
                     self.show_message(f"Snap to grid: {'ON' if self.snap_to_grid else 'OFF'}", 60)
-                elif event.key == pygame.K_p:
+                elif event.scancode == 19:
                     self.player_start_mode = not self.player_start_mode
                     self.npc_mode = False
                     self.rotation_mode = False
                     self.selected_object = None
                     self.rotating_object = None
                     self.show_message(f"Player start mode: {'ON' if self.player_start_mode else 'OFF'}", 60)
-                elif event.key == pygame.K_n:
+                elif event.scancode == 17:
                     self.npc_mode = not self.npc_mode
                     self.player_start_mode = False
                     self.rotation_mode = False
                     self.selected_object = None
                     self.rotating_object = None
                     self.show_message(f"NPC Mode: {'ON' if self.npc_mode else 'OFF'}", 60)
-                elif event.key == pygame.K_r:
-                    self.rotation_mode = not self.rotation_mode
-                    self.show_message(f"Rotation mode: {'ON' if self.rotation_mode else 'OFF'}", 60)
                 elif event.key == pygame.K_1:
                     if not self.npc_mode and not self.player_start_mode:
                         self.current_type = 'tree'
@@ -682,30 +678,35 @@ class MapEditor:
                         closest_obj = None
                         closest_dist = float('inf')
                         all_items = self.objects + self.npcs
-
                         if self.show_player_start:
                             all_items_with_start = all_items + [self.player_start]
                         else:
                             all_items_with_start = all_items
-
                         for obj in all_items_with_start:
                             dist = ((obj['x'] - self.mouse_world_x) ** 2 +
                                     (obj['z'] - self.mouse_world_z) ** 2) ** 0.5
                             if dist < closest_dist and dist < 5.0:
                                 closest_dist = dist
                                 closest_obj = obj
-
                         if closest_obj:
-                            if pygame.key.get_mods() & pygame.KMOD_CTRL:
-                                if closest_obj == self.player_start:
+                            if closest_obj == self.player_start:
+                                self.player_start['x'] = 0
+                                self.player_start['z'] = 0
+                                self.player_start['rot'] = 0
+                                self.show_message(f"Player start reset to center", 60)
+                            elif closest_obj in self.objects:
+                                self.objects.remove(closest_obj)
+                                if self.selected_object == closest_obj:
                                     self.selected_object = None
-                                    self.player_start_mode = True
-                                    self.show_message(f"Selected: player start, rot: {closest_obj.get('rot', 0)}°", 60)
-                                else:
-                                    self.selected_object = closest_obj
-                                    self.player_start_mode = False
-                                    obj_type = closest_obj.get('type', 'npc')
-                                    self.show_message(f"Selected: {obj_type}, rot: {closest_obj.get('rot', 0)}°", 60)
+                                self.show_message(f"Deleted", 60)
+                            elif closest_obj in self.npcs:
+                                self.npcs.remove(closest_obj)
+                                if self.selected_object == closest_obj:
+                                    self.selected_object = None
+                                self.show_message(f"Deleted", 60)
+                            if self.rotating_object == closest_obj:
+                                self.rotating_object = None
+
                             else:
                                 if closest_obj == self.player_start:
                                     self.player_start['x'] = 0
