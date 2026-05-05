@@ -123,7 +123,7 @@ class AnimatedNPC:
         # === СОЗДАНИЕ КОЛЛАЙДЕРА | CREATE COLLIDER ===
         self._create_collider()
 
-        print(f"✅ NPC создан в позиции {start_pos} | NPC created at position {start_pos}")
+        print(f"✅ NPC создан в позиции {start_pos[0]:.2f} | NPC created at position {start_pos[0]:.2f}")
 
     def _load_sound(self, sound_path, sound_attr, sound_type="sound", volume=0.5):
         if not sound_path:
