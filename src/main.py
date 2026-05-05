@@ -1,4 +1,5 @@
 import sys
+import time
 from pathlib import Path
 
 # Добавляем корневую директорию в PYTHONPATH для абсолютных импортов | Add root dir to PYTHONPATH for absolute imports
@@ -24,6 +25,8 @@ def main():
     """Главная функция инициализации игры. | Main game initialization function."""
     global game_logic, player, minimap, weapon
     app = init_engine()
+    # Временная метка для измерения времени загрузки карты и появления мира
+    _start_load = time.time()
 
     # Читаем стартовую позицию игрока напрямую из JSON | Read player start position directly from JSON
     filepath = ASSETS_DIR / 'map.json'
@@ -54,6 +57,9 @@ def main():
 
     # Загружаем карту один раз с созданным игроком | Load map once with created player
     world_entities, npcs_from_map, _ = load_map('map.json', player=player, load_npcs=True)
+    # Замерение времени после загрузки карты
+    _load_duration = time.time() - _start_load
+    print(f"[load-time] Карта загружена за {_load_duration:.3f} сек")
 
     # Инициализация игровой логики | Initialize game logic
     game_logic = GameLogic(
