@@ -61,7 +61,7 @@ class MapEditor:
         # Цвета для объектов | Colors for objects
         self.colors = {
             'tree': (34, 170, 34),
-            'rock': (170, 85, 34),
+            'stone': (170, 85, 34),
             'cottage': (170, 68, 170),
             'statue': (170, 170, 255),
             'flashlight': (255, 255, 170),
@@ -101,7 +101,7 @@ class MapEditor:
         self.clock = pygame.time.Clock()
 
     def load_icon_images(self):
-        icon_types = ['tree', 'rock', 'cottage', 'statue', 'flashlight',
+        icon_types = ['tree', 'stone', 'cottage', 'statue', 'flashlight',
                       'target', 'npc', 'player_start']
 
         print(f"Загрузка иконок из папки | Load icons from folder: {ICONS_DIR}")
@@ -581,8 +581,8 @@ class MapEditor:
                         self.show_message(f"Selected: tree", 30)
                 elif event.key == pygame.K_2:
                     if not self.npc_mode and not self.player_start_mode:
-                        self.current_type = 'rock'
-                        self.show_message(f"Selected: rock", 30)
+                        self.current_type = 'stone'
+                        self.show_message(f"Selected: stone", 30)
                 elif event.key == pygame.K_3:
                     if not self.npc_mode and not self.player_start_mode:
                         self.current_type = 'cottage'

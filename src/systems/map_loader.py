@@ -4,10 +4,10 @@ from src.shaders.comics_shader import comics_shaders
 from src.utils.object_setup import setup_collidable_object
 from src.entities.npc import AnimatedNPC
 from src.core.config import (
-    ROCK_COLLIDER_SHRINK, TREE_COLLIDER_SHRINK, STATUE_COLLIDER_SHRINK,
+    STONE_COLLIDER_SHRINK, TREE_COLLIDER_SHRINK, STATUE_COLLIDER_SHRINK,
     ASSETS_DIR, GROUND_SCALE, COTTAGE_COLLIDER_SHRINK,
     FLASHLIGHT_COLLIDER_SHRINK, TARGET_COLLIDER_SHRINK,
-    ROCK_COLOR, TREE_COLOR, COTTAGE_COLOR, FLASHLIGHT_COLOR,
+    STONE_COLOR, TREE_COLOR, COTTAGE_COLOR, FLASHLIGHT_COLOR,
     STATUE_COLOR, TARGET_COLOR, SPECULAR_FACTOR,
     NPC_SPEED_WALK, NPC_SPEED_RUN_1, MODELS_DIR,
     NPC_IDLE_ANIM, NPC_WALK_ANIM, NPC_RUN_ANIM_1, NPC_SKILL_ANIM, NPC_SCALE, NPC_SKILL_SOUND, NPC_WALK_SOUND,
@@ -74,7 +74,7 @@ def load_map(filename='map_orig.json', player=None, load_npcs=True, verbose=True
         print(f"📦 Загрузка {len(objects_data)} объектов... | Loading {len(objects_data)} objects...")
 
     for i, obj in enumerate(objects_data, 1):
-        obj_type = obj.get("type", "rock")
+        obj_type = obj.get("type", "stone")
         x = float(obj.get("x", 0)) * scale_factor
         z = float(obj.get("z", 0)) * scale_factor
         y = float(obj.get("y", 3.0))
@@ -93,26 +93,24 @@ def load_map(filename='map_orig.json', player=None, load_npcs=True, verbose=True
         x, z = x_clamped, z_clamped
 
         # Создание объектов по типу | Create objects by type
-        if obj_type == "rock":
+        if obj_type == "stone":
             entity = Entity(
-                model='rock',
-                texture='rock',
-                scale=2,
+                model='stone',
+                scale=1.5,
                 position=(x, y, z),
                 rotation=(0, rot, 0),  # Добавлен поворот по Y
                 shader=comics_shaders,
-                color=ROCK_COLOR,
+                color=STONE_COLOR,
                 enabled=False
             )
             entity.color = entity.color.tint(0.3)
-            entity.set_shader_input("specular_factor", SPECULAR_FACTOR)
-            invoke(setup_collidable_object, entity, shrink_factor=ROCK_COLLIDER_SHRINK, delay=0)
+            # entity.set_shader_input("specular_factor", SPECULAR_FACTOR)
+            invoke(setup_collidable_object, entity, shrink_factor=STONE_COLLIDER_SHRINK, delay=0)
             world_entities.append(entity)
 
         elif obj_type == "target":
             entity = Entity(
                 model='target',
-                texture='target',
                 position=(x, y, z),
                 rotation=(0, rot, 0),  # Добавлен поворот по Y
                 shader=comics_shaders,
@@ -120,14 +118,13 @@ def load_map(filename='map_orig.json', player=None, load_npcs=True, verbose=True
                 enabled=False
             )
             entity.color = entity.color.tint(0.2)
-            entity.set_shader_input("specular_factor", SPECULAR_FACTOR)
+            # entity.set_shader_input("specular_factor", SPECULAR_FACTOR)
             invoke(setup_collidable_object, entity, shrink_factor=TARGET_COLLIDER_SHRINK, delay=0)
             world_entities.append(entity)
 
         elif obj_type == "tree":
             entity = Entity(
                 model='tree',
-                texture='tree',
                 scale=2,
                 position=(x, y, z),
                 rotation=(0, rot, 0),  # Добавлен поворот по Y
@@ -143,7 +140,6 @@ def load_map(filename='map_orig.json', player=None, load_npcs=True, verbose=True
         elif obj_type == "cottage":
             entity = Entity(
                 model='cottage',
-                texture='cottage',
                 scale=5,
                 position=(x, y, z),
                 rotation=(0, rot, 0),  # Добавлен поворот по Y
@@ -152,14 +148,13 @@ def load_map(filename='map_orig.json', player=None, load_npcs=True, verbose=True
                 enabled=False
             )
             entity.color = entity.color.tint(0.4)
-            entity.set_shader_input("specular_factor", SPECULAR_FACTOR)
+            # entity.set_shader_input("specular_factor", SPECULAR_FACTOR)
             invoke(setup_collidable_object, entity, shrink_factor=COTTAGE_COLLIDER_SHRINK, delay=0)
             world_entities.append(entity)
 
         elif obj_type == "flashlight":
             entity = Entity(
                 model='flashlight',
-                texture='flashlight',
                 scale=3,
                 position=(x, y, z),
                 rotation=(0, rot, 0),  # Добавлен поворот по Y
@@ -168,14 +163,13 @@ def load_map(filename='map_orig.json', player=None, load_npcs=True, verbose=True
                 enabled=False
             )
             entity.color = entity.color.tint(0.3)
-            entity.set_shader_input("specular_factor", SPECULAR_FACTOR)
+            # entity.set_shader_input("specular_factor", SPECULAR_FACTOR)
             invoke(setup_collidable_object, entity, shrink_factor=FLASHLIGHT_COLLIDER_SHRINK, delay=0)
             world_entities.append(entity)
 
         elif obj_type == "statue":
             statue = Entity(
                 model='statue',
-                texture='statue',
                 scale=0.5,
                 position=(x, 0.5, z),
                 rotation=(0, rot, 0),
@@ -184,7 +178,7 @@ def load_map(filename='map_orig.json', player=None, load_npcs=True, verbose=True
             )
 
             statue.color = statue.color.tint(0.2)
-            statue.set_shader_input("specular_factor", SPECULAR_FACTOR)
+            # statue.set_shader_input("specular_factor", SPECULAR_FACTOR)
 
             statue.collider = 'box'
             statue.is_statue = True

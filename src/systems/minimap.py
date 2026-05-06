@@ -92,7 +92,7 @@ class Minimap:
             col = color.white
             if hasattr(ent, 'visual') or (hasattr(ent, 'model') and 'statue' in str(ent.model)):
                 col = color.orange
-            elif 'rock' in str(ent.model):
+            elif 'stone' in str(ent.model):
                 col = color.gray
             elif 'tree' in str(ent.model):
                 col = color.green

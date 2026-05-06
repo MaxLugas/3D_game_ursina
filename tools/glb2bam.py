@@ -17,6 +17,8 @@ class Converter(ShowBase):
             print("failed to load model")
             return
 
+        model.setP(90)
+
         output_path = os.path.splitext(input_path)[0] + ".bam"
 
         print(f"writing: {output_path}")

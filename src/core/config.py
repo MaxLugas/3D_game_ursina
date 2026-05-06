@@ -56,7 +56,7 @@ NPC_SCALE = 2.0                                         # Масштаб NPC | N
 
 # ================ Коллайдеры | Colliders ================
 COLLIDER_SHRINK_FACTOR = 0.8                            # Базовый коэффициент уменьшения коллайдера | Base collider shrink factor
-ROCK_COLLIDER_SHRINK = 0.5                              # Уменьшение коллайдера для камней (по X/Z) | Collider shrink for rocks (X/Z axes)
+STONE_COLLIDER_SHRINK = 0.5                              # Уменьшение коллайдера для камней (по X/Z) | Collider shrink for STONEs (X/Z axes)
 TREE_COLLIDER_SHRINK = 0.5                              # Уменьшение коллайдера для деревьев | Collider shrink for trees
 COTTAGE_COLLIDER_SHRINK = 0.2                           # Уменьшение коллайдера для домиков | Collider shrink for cottages
 FLASHLIGHT_COLLIDER_SHRINK = 0.2                        # Уменьшение коллайдера для фонариков | Collider shrink for flashlights
@@ -78,7 +78,7 @@ WINDOW_VSYNC = False                                    # Вертикальна
 SHOW_COLLIDERS = True                                   # Отображение отладочных коллайдеров | Show debug colliders
 
 # ================ Цвета объектов в стиле комикс | Comic-Style Object Colors ================
-ROCK_COLOR = color.rgb(230, 110, 80)
+STONE_COLOR = color.rgb(230, 110, 80)
 TREE_COLOR = color.rgb(40, 250, 100)
 COTTAGE_COLOR = color.rgb(250, 130, 70)
 FLASHLIGHT_COLOR = color.rgb(255, 255, 100)
