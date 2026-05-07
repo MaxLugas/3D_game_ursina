@@ -19,8 +19,6 @@ OBJECT_CONFIGS = {
     "stone": {
         "model": "stone",
         "scale": 1.5,
-        "tint": 0.3,
-        "color": STONE_COLOR,
         "shrink_factor": STONE_COLLIDER_SHRINK,
         "y_offset": 0,
         "enabled": False
@@ -28,8 +26,6 @@ OBJECT_CONFIGS = {
     "target": {
         "model": "target",
         "scale": 1.0,
-        "tint": 0.2,
-        "color": TARGET_COLOR,
         "shrink_factor": TARGET_COLLIDER_SHRINK,
         "y_offset": 0,
         "enabled": False
@@ -37,8 +33,6 @@ OBJECT_CONFIGS = {
     "tree": {
         "model": "tree",
         "scale": 2.0,
-        "tint": 0.2,
-        "color": TREE_COLOR,
         "shrink_factor": TREE_COLLIDER_SHRINK,
         "y_offset": 0,
         "has_specular": True,
@@ -47,8 +41,6 @@ OBJECT_CONFIGS = {
     "cottage": {
         "model": "cottage",
         "scale": 5.0,
-        "tint": 0.4,
-        "color": COTTAGE_COLOR,
         "shrink_factor": COTTAGE_COLLIDER_SHRINK,
         "y_offset": 0,
         "enabled": False
@@ -56,8 +48,6 @@ OBJECT_CONFIGS = {
     "flashlight": {
         "model": "flashlight",
         "scale": 3.0,
-        "tint": 0.3,
-        "color": FLASHLIGHT_COLOR,
         "shrink_factor": FLASHLIGHT_COLLIDER_SHRINK,
         "y_offset": 0,
         "enabled": False
@@ -65,8 +55,6 @@ OBJECT_CONFIGS = {
     "statue": {
         "model": "statue",
         "scale": 0.5,
-        "tint": 0.2,
-        "color": STATUE_COLOR,
         "shrink_factor": None,
         "collider": "box",
         "y_offset": -0.5,
@@ -97,20 +85,13 @@ def create_world_object(obj_type, x, y, z, rot, verbose=True):
         position=(x, y + config.get("y_offset", 0), z),
         rotation=(0, rot, 0),
         shader=comics_shaders,
-        color=config["color"],
         enabled=config.get("enabled", False)
     )
-
-    if config.get("tint", 0) != 0:
-        entity.color = entity.color.tint(config["tint"])
 
     if config.get("shrink_factor") is not None:
         invoke(setup_collidable_object, entity, shrink_factor=config["shrink_factor"], delay=0)
     elif config.get("collider"):
         entity.collider = config["collider"]
-
-    if config.get("has_specular"):
-        entity.set_shader_input("specular_factor", SPECULAR_FACTOR)
 
     if config.get("is_statue"):
         entity.is_statue = True
@@ -118,7 +99,7 @@ def create_world_object(obj_type, x, y, z, rot, verbose=True):
     return entity
 
 
-def load_map(filename='map_orig.json', player=None, load_npcs=True, verbose=True):
+def load_map(filename='map.json', player=None, load_npcs=True, verbose=True):
     """
     Загрузка карты из JSON файла
     Load map from JSON file
