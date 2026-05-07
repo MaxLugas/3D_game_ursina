@@ -2,7 +2,7 @@ from panda3d.core import getModelPath
 from ursina import *
 from src.core.config import GROUND_SCALE, WINDOW_TITLE, WINDOW_BORDERLESS, WINDOW_VSYNC, SHOW_COLLIDERS, ASSETS_DIR, \
     DIRECTIONAL_LIGHT_DIRECTION, SKY_TEXTURE, AMBIENT_LIGHT_COLOR, DIRECTIONAL_LIGHT_COLOR, GRASS_TEXTURE, MODELS_DIR
-from src.shaders.comics_shader import comics_shaders, ground_shader_panda
+from src.shaders.shader_loader import  ground_shader_panda
 
 
 def init_engine():

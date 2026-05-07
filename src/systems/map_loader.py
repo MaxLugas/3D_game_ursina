@@ -1,6 +1,6 @@
 from ursina import *
 import json
-from src.shaders.comics_shader import comics_shaders
+from src.shaders.shader_loader import comics_shaders
 from src.utils.object_setup import setup_collidable_object
 from src.entities.npc import AnimatedNPC
 from src.core.config import (
@@ -14,6 +14,108 @@ from src.core.config import (
     NPC_ATTACK_1_SOUND
 )
 
+# === Конфигурация объектов мира | World objects configuration ===
+OBJECT_CONFIGS = {
+    "stone": {
+        "model": "stone",
+        "scale": 1.5,
+        "tint": 0.3,
+        "color": STONE_COLOR,
+        "shrink_factor": STONE_COLLIDER_SHRINK,
+        "y_offset": 0,
+        "enabled": False
+    },
+    "target": {
+        "model": "target",
+        "scale": 1.0,
+        "tint": 0.2,
+        "color": TARGET_COLOR,
+        "shrink_factor": TARGET_COLLIDER_SHRINK,
+        "y_offset": 0,
+        "enabled": False
+    },
+    "tree": {
+        "model": "tree",
+        "scale": 2.0,
+        "tint": 0.2,
+        "color": TREE_COLOR,
+        "shrink_factor": TREE_COLLIDER_SHRINK,
+        "y_offset": 0,
+        "has_specular": True,
+        "enabled": False
+    },
+    "cottage": {
+        "model": "cottage",
+        "scale": 5.0,
+        "tint": 0.4,
+        "color": COTTAGE_COLOR,
+        "shrink_factor": COTTAGE_COLLIDER_SHRINK,
+        "y_offset": 0,
+        "enabled": False
+    },
+    "flashlight": {
+        "model": "flashlight",
+        "scale": 3.0,
+        "tint": 0.3,
+        "color": FLASHLIGHT_COLOR,
+        "shrink_factor": FLASHLIGHT_COLLIDER_SHRINK,
+        "y_offset": 0,
+        "enabled": False
+    },
+    "statue": {
+        "model": "statue",
+        "scale": 0.5,
+        "tint": 0.2,
+        "color": STATUE_COLOR,
+        "shrink_factor": None,
+        "collider": "box",
+        "y_offset": -0.5,
+        "is_statue": True,
+        "enabled": True
+    }
+}
+
+
+def create_world_object(obj_type, x, y, z, rot, verbose=True):
+    """
+    Создание объекта мира по типу
+    Create world object by type
+
+    Returns:
+        Entity or None: созданный объект или None при ошибке
+    """
+    if obj_type not in OBJECT_CONFIGS:
+        if verbose:
+            print(f"⚠️ Неизвестный тип объекта: {obj_type} | Unknown object type: {obj_type}")
+        return None
+
+    config = OBJECT_CONFIGS[obj_type]
+
+    entity = Entity(
+        model=config["model"],
+        scale=config["scale"],
+        position=(x, y + config.get("y_offset", 0), z),
+        rotation=(0, rot, 0),
+        shader=comics_shaders,
+        color=config["color"],
+        enabled=config.get("enabled", False)
+    )
+
+    if config.get("tint", 0) != 0:
+        entity.color = entity.color.tint(config["tint"])
+
+    if config.get("shrink_factor") is not None:
+        invoke(setup_collidable_object, entity, shrink_factor=config["shrink_factor"], delay=0)
+    elif config.get("collider"):
+        entity.collider = config["collider"]
+
+    if config.get("has_specular"):
+        entity.set_shader_input("specular_factor", SPECULAR_FACTOR)
+
+    if config.get("is_statue"):
+        entity.is_statue = True
+
+    return entity
 
 
 def load_map(filename='map_orig.json', player=None, load_npcs=True, verbose=True):
@@ -86,104 +188,17 @@ def load_map(filename='map_orig.json', player=None, load_npcs=True, verbose=True
         x_clamped = clamp(x, -map_half + 2.0, map_half - 2.0)
         z_clamped = clamp(z, -map_half + 2.0, map_half - 2.0)
 
-        if x != x_clamped or z != z_clamped and verbose:
+        if (x != x_clamped or z != z_clamped) and verbose:
             print(
                 f"⚠️ Объект {i} ({obj_type}) прижат к границе: ({x:.1f}, {z:.1f}) -> ({x_clamped:.1f}, {z_clamped:.1f}) | Object clamped to boundary")
 
         x, z = x_clamped, z_clamped
 
-        # Создание объектов по типу | Create objects by type
-        if obj_type == "stone":
-            entity = Entity(
-                model='stone',
-                scale=1.5,
-                position=(x, y, z),
-                rotation=(0, rot, 0),  # Добавлен поворот по Y
-                shader=comics_shaders,
-                color=STONE_COLOR,
-                enabled=False
-            )
-            entity.color = entity.color.tint(0.3)
-            # entity.set_shader_input("specular_factor", SPECULAR_FACTOR)
-            invoke(setup_collidable_object, entity, shrink_factor=STONE_COLLIDER_SHRINK, delay=0)
+        # Создание объекта через фабрику | Create object via factory
+        entity = create_world_object(obj_type, x, y, z, rot, verbose)
+        if entity:
             world_entities.append(entity)
 
-        elif obj_type == "target":
-            entity = Entity(
-                model='target',
-                position=(x, y, z),
-                rotation=(0, rot, 0),  # Добавлен поворот по Y
-                shader=comics_shaders,
-                color=TARGET_COLOR,
-                enabled=False
-            )
-            entity.color = entity.color.tint(0.2)
-            # entity.set_shader_input("specular_factor", SPECULAR_FACTOR)
-            invoke(setup_collidable_object, entity, shrink_factor=TARGET_COLLIDER_SHRINK, delay=0)
-            world_entities.append(entity)
-
-        elif obj_type == "tree":
-            entity = Entity(
-                model='tree',
-                scale=2,
-                position=(x, y, z),
-                rotation=(0, rot, 0),  # Добавлен поворот по Y
-                shader=comics_shaders,
-                color=TREE_COLOR,
-                enabled=False
-            )
-            entity.color = entity.color.tint(0.2)
-            entity.set_shader_input("specular_factor", SPECULAR_FACTOR)
-            invoke(setup_collidable_object, entity, shrink_factor=TREE_COLLIDER_SHRINK, delay=0)
-            world_entities.append(entity)
-
-        elif obj_type == "cottage":
-            entity = Entity(
-                model='cottage',
-                scale=5,
-                position=(x, y, z),
-                rotation=(0, rot, 0),  # Добавлен поворот по Y
-                shader=comics_shaders,
-                color=COTTAGE_COLOR,
-                enabled=False
-            )
-            entity.color = entity.color.tint(0.4)
-            # entity.set_shader_input("specular_factor", SPECULAR_FACTOR)
-            invoke(setup_collidable_object, entity, shrink_factor=COTTAGE_COLLIDER_SHRINK, delay=0)
-            world_entities.append(entity)
-
-        elif obj_type == "flashlight":
-            entity = Entity(
-                model='flashlight',
-                scale=3,
-                position=(x, y, z),
-                rotation=(0, rot, 0),  # Добавлен поворот по Y
-                shader=comics_shaders,
-                color=FLASHLIGHT_COLOR,
-                enabled=False
-            )
-            entity.color = entity.color.tint(0.3)
-            # entity.set_shader_input("specular_factor", SPECULAR_FACTOR)
-            invoke(setup_collidable_object, entity, shrink_factor=FLASHLIGHT_COLLIDER_SHRINK, delay=0)
-            world_entities.append(entity)
-
-        elif obj_type == "statue":
-            statue = Entity(
-                model='statue',
-                scale=0.5,
-                position=(x, 0.5, z),
-                rotation=(0, rot, 0),
-                shader=comics_shaders,
-                color=STATUE_COLOR
-            )
-
-            statue.color = statue.color.tint(0.2)
-            # statue.set_shader_input("specular_factor", SPECULAR_FACTOR)
-
-            statue.collider = 'box'
-            statue.is_statue = True
-
-            world_entities.append(statue)
     if verbose:
         print(f"✅ Создано {len(world_entities)} объектов | Created {len(world_entities)} objects")
 
