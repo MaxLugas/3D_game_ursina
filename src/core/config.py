@@ -63,6 +63,14 @@ FLASHLIGHT_COLLIDER_SHRINK = 0.2                        # Уменьшение �
 TARGET_COLLIDER_SHRINK = 1                              # Уменьшение коллайдера для мишеней | Collider shrink for targets
 STATUE_COLLIDER_SHRINK = 1                              # Коллайдер статуи = размер модели | Statue collider matches model size
 
+# ================ Размер | Scale ================
+STONE_SCALE=1.5
+TARGET_SCALE=1
+TREE_SCALE=2
+COTTAGE_SCALE=5
+FLASHLIGHT_SCALE=3
+STATUE_SCALE=0.5
+
 # ================ Мини-карта | Minimap ================
 MINIMAP_SIZE = 0.3                                      # Размер мини-карты | Minimap size as fraction of screen height
 MINIMAP_PLAYER_MARKER_COLOR = 'lime'                    # Цвет маркера игрока | Player marker color
@@ -76,14 +84,6 @@ WINDOW_TITLE = "Game"                                   # Заголовок и�
 WINDOW_BORDERLESS = False                               # Безрамочное окно (False = обычное окно) | Borderless window (False = standard window)
 WINDOW_VSYNC = False                                    # Вертикальная синхронизация (отключена для производительности) | Vertical sync (disabled for performance)
 SHOW_COLLIDERS = True                                   # Отображение отладочных коллайдеров | Show debug colliders
-
-# ================ Цвета объектов в стиле комикс | Comic-Style Object Colors ================
-STONE_COLOR = color.rgb(230, 110, 80)
-TREE_COLOR = color.rgb(40, 250, 100)
-COTTAGE_COLOR = color.rgb(250, 130, 70)
-FLASHLIGHT_COLOR = color.rgb(255, 255, 100)
-STATUE_COLOR = color.rgb(150, 150, 255)
-TARGET_COLOR = color.rgb(255, 70, 70)
 
 # ================ Освещение и окружение | Lighting and Environment ================
 SKY_TEXTURE = 'sky_sunset'                              # Имя текстуры неба | Sky texture name

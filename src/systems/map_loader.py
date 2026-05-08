@@ -6,33 +6,31 @@ from src.entities.npc import AnimatedNPC
 from src.core.config import (
     STONE_COLLIDER_SHRINK, TREE_COLLIDER_SHRINK, STATUE_COLLIDER_SHRINK,
     ASSETS_DIR, GROUND_SCALE, COTTAGE_COLLIDER_SHRINK,
-    FLASHLIGHT_COLLIDER_SHRINK, TARGET_COLLIDER_SHRINK,
-    STONE_COLOR, TREE_COLOR, COTTAGE_COLOR, FLASHLIGHT_COLOR,
-    STATUE_COLOR, TARGET_COLOR, SPECULAR_FACTOR,
+    FLASHLIGHT_COLLIDER_SHRINK, TARGET_COLLIDER_SHRINK, SPECULAR_FACTOR,
     NPC_SPEED_WALK, NPC_SPEED_RUN_1, MODELS_DIR,
     NPC_IDLE_ANIM, NPC_WALK_ANIM, NPC_RUN_ANIM_1, NPC_SKILL_ANIM, NPC_SCALE, NPC_SKILL_SOUND, NPC_WALK_SOUND,
-    NPC_ATTACK_1_SOUND
+    NPC_ATTACK_1_SOUND, STONE_SCALE, TARGET_SCALE, STATUE_SCALE, FLASHLIGHT_SCALE, COTTAGE_SCALE, TREE_SCALE
 )
 
 # === Конфигурация объектов мира | World objects configuration ===
 OBJECT_CONFIGS = {
     "stone": {
         "model": "stone",
-        "scale": 1.5,
+        "scale": STONE_SCALE,
         "shrink_factor": STONE_COLLIDER_SHRINK,
         "y_offset": 0,
         "enabled": False
     },
     "target": {
         "model": "target",
-        "scale": 1.0,
+        "scale": TARGET_SCALE,
         "shrink_factor": TARGET_COLLIDER_SHRINK,
         "y_offset": 0,
         "enabled": False
     },
     "tree": {
         "model": "tree",
-        "scale": 2.0,
+        "scale": TREE_SCALE,
         "shrink_factor": TREE_COLLIDER_SHRINK,
         "y_offset": 0,
         "has_specular": True,
@@ -40,21 +38,21 @@ OBJECT_CONFIGS = {
     },
     "cottage": {
         "model": "cottage",
-        "scale": 5.0,
+        "scale": COTTAGE_SCALE,
         "shrink_factor": COTTAGE_COLLIDER_SHRINK,
         "y_offset": 0,
         "enabled": False
     },
     "flashlight": {
         "model": "flashlight",
-        "scale": 3.0,
+        "scale": FLASHLIGHT_SCALE,
         "shrink_factor": FLASHLIGHT_COLLIDER_SHRINK,
         "y_offset": 0,
         "enabled": False
     },
     "statue": {
         "model": "statue",
-        "scale": 0.5,
+        "scale": STATUE_SCALE,
         "shrink_factor": None,
         "collider": "box",
         "y_offset": -0.5,
