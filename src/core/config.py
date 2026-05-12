@@ -7,6 +7,7 @@ ASSETS_DIR = Path(__file__).parent.parent / 'assets'    # Директория �
 MODELS_DIR = ASSETS_DIR / 'models'                      # Директория 3D-моделей | 3D models directory
 AUDIO_DIR = ASSETS_DIR / 'audio'                        # Директория аудиофайлов | Audio files directory
 ICONS_DIR = ASSETS_DIR / 'icons'                        # Директория иконок | Icons directory
+MAP_FILENAME = ASSETS_DIR/ 'map3D.json'
 
 # ================ Игровые параметры | Game Parameters ================
 GROUND_SCALE = 100                                      # Размер игрового поля | Game field size

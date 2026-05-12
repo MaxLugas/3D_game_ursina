@@ -14,7 +14,7 @@ import json as json_module
 from src.systems.minimap import Minimap
 from src.entities.weapon import FPSWeapon
 from src.core.config import PLAYER_SPEED, PLAYER_SECOND_JUMP_HEIGHT, MAP_HALF_SIZE, PLAYER_GRAVITY, \
-    PLAYER_MOUSE_SENSITIVITY, GLOCK_WEAPON_MODEL, GLOCK_WEAPON_SCALE, ASSETS_DIR
+    PLAYER_MOUSE_SENSITIVITY, GLOCK_WEAPON_MODEL, GLOCK_WEAPON_SCALE, ASSETS_DIR, MAP_FILENAME
 
 game_logic = None
 player = None
@@ -29,7 +29,7 @@ def main():
     _start_load = time.time()
 
     # Читаем стартовую позицию игрока напрямую из JSON | Read player start position directly from JSON
-    filepath = ASSETS_DIR / 'map.json'
+    filepath = ASSETS_DIR / MAP_FILENAME
     try:
         with open(filepath, 'r', encoding='utf-8') as f:
             data = json_module.load(f)
@@ -56,7 +56,7 @@ def main():
     weapon = FPSWeapon(model_path=GLOCK_WEAPON_MODEL, scale=GLOCK_WEAPON_SCALE)
 
     # Загружаем карту один раз с созданным игроком | Load map once with created player
-    world_entities, npcs_from_map, _ = load_map('map.json', player=player, load_npcs=True)
+    world_entities, npcs_from_map, _ = load_map(MAP_FILENAME, player=player, load_npcs=True)
     # Замерение времени после загрузки карты
     _load_duration = time.time() - _start_load
     print(f"[load-time] Карта загружена за {_load_duration:.3f} сек")

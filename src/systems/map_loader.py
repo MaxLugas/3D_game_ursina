@@ -7,7 +7,7 @@ from src.core.config import (
     STONE_COLLIDER_SHRINK, TREE_COLLIDER_SHRINK, STATUE_COLLIDER_SHRINK,
     ASSETS_DIR, GROUND_SCALE, COTTAGE_COLLIDER_SHRINK,
     FLASHLIGHT_COLLIDER_SHRINK, TARGET_COLLIDER_SHRINK, SPECULAR_FACTOR,
-    NPC_SPEED_WALK, NPC_SPEED_RUN_1, MODELS_DIR,
+    NPC_SPEED_WALK, NPC_SPEED_RUN_1, MODELS_DIR, MAP_FILENAME,
     NPC_IDLE_ANIM, NPC_WALK_ANIM, NPC_RUN_ANIM_1, NPC_SKILL_ANIM, NPC_SCALE, NPC_SKILL_SOUND, NPC_WALK_SOUND,
     NPC_ATTACK_1_SOUND, STONE_SCALE, TARGET_SCALE, STATUE_SCALE, FLASHLIGHT_SCALE, COTTAGE_SCALE, TREE_SCALE
 )
@@ -97,7 +97,7 @@ def create_world_object(obj_type, x, y, z, rot, verbose=True):
     return entity
 
 
-def load_map(filename='map.json', player=None, load_npcs=True, verbose=True):
+def load_map(filename=MAP_FILENAME, player=None, load_npcs=True, verbose=True):
     """
     Загрузка карты из JSON файла
     Load map from JSON file
