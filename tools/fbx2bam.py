@@ -20,7 +20,6 @@ class FBXToBam(ShowBase):
             print("❌ failed to load FBX")
             return
 
-        # важно: не ломаем скелет
         actor.clearTransform()
 
         output_path = os.path.splitext(input_path)[0] + ".bam"
