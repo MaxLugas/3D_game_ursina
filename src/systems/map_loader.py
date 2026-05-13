@@ -55,7 +55,7 @@ OBJECT_CONFIGS = {
         "scale": STATUE_SCALE,
         "shrink_factor": None,
         "collider": "box",
-        "y_offset": -0.5,
+        "y_offset": 0,
         "is_statue": True,
         "enabled": True
     }

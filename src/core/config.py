@@ -71,6 +71,7 @@ TREE_SCALE=2
 COTTAGE_SCALE=5
 FLASHLIGHT_SCALE=3
 STATUE_SCALE=0.5
+PLAYER_SPAWN_SCALE=2
 
 # ================ Мини-карта | Minimap ================
 MINIMAP_SIZE = 0.3                                      # Размер мини-карты | Minimap size as fraction of screen height

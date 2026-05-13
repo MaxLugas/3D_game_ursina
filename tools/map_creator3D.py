@@ -92,8 +92,20 @@ def create_ghost():
     )
     refresh_ghost_position()
 
-def get_object_y(obj_type: str) -> float:
-    """Возвращает высоту размещения объекта в зависимости от его масштаба"""
+
+def get_display_y(obj_type: str) -> float:
+    """Возвращает высоту для визуального отображения объекта (с учетом масштаба)"""
+    scale = get_scale(obj_type)
+
+    if obj_type in ('npc', 'player_spawn'):
+        return scale
+
+    base_y = scale if scale != 1.0 else 1.0
+    return base_y + get_y_offset(obj_type)
+
+
+def get_save_y(obj_type: str) -> float:
+    """Возвращает высоту для сохранения в JSON"""
     if obj_type in ('npc', 'player_spawn'):
         return 0.0
 
@@ -121,12 +133,7 @@ def refresh_ghost_position():
 
     if hit.hit:
         x, z = hit.world_point.x, hit.world_point.z
-
-        if current_type[0] in ('npc', 'player_spawn'):
-            y = 0.0
-        else:
-            y = get_object_y(current_type[0])
-
+        y = get_display_y(current_type[0])
         ghost_entity.position = Vec3(x, y, z)
     else:
         ghost_entity.enabled = False
@@ -139,10 +146,7 @@ def place_object():
 
     obj_type = current_type[0]
 
-    if obj_type in ('npc', 'player_spawn'):
-        pos = Vec3(ghost_entity.position.x, 0, ghost_entity.position.z)
-    else:
-        pos = Vec3(ghost_entity.position.x, get_object_y(obj_type), ghost_entity.position.z)
+    pos = Vec3(ghost_entity.position.x, get_display_y(obj_type), ghost_entity.position.z)
 
     obj_color = color.white
     if obj_type == 'player_spawn':
@@ -160,8 +164,9 @@ def place_object():
         color=obj_color
     )
 
+    save_y = get_save_y(obj_type)
     data = {
-        'type': obj_type, 'x': pos.x, 'y': pos.y, 'z': pos.z,
+        'type': obj_type, 'x': pos.x, 'y': save_y, 'z': pos.z,
         'scale': get_scale(obj_type), 'rot': ghost_entity.rotation_y,
         'entity_ref': obj
     }
@@ -177,8 +182,6 @@ def place_object():
         update_player_spawn()
     else:
         placed_objects.append(data)
-
-    print(f"{obj_type} placed at {pos}")
 
 def delete_object():
     global player_spawn_data
@@ -263,10 +266,11 @@ def load_map():
 
     for obj_data in data.get("objects", []):
         obj_type = obj_data.get("type", "cube")
+        visual_y = get_display_y(obj_type)
         obj = Entity(
             model=get_model(obj_type),
             scale=obj_data.get('scale', get_scale(obj_type)),
-            position=(obj_data['x'], obj_data.get('y', 1), obj_data['z']),
+            position=(obj_data['x'], visual_y, obj_data['z']),
             rotation_y=obj_data.get('rot', 0),
             collider='box'
         )
@@ -274,10 +278,11 @@ def load_map():
         placed_objects.append(obj_data)
 
     for npc_data in data.get("npcs", []):
+        visual_y = get_display_y('npc')
         npc = Entity(
             model='droid.bam',
             scale=get_scale('npc'),
-            position=(npc_data['x'], 0, npc_data['z']),
+            position=(npc_data['x'], visual_y, npc_data['z']),
             rotation_y=npc_data.get('rot', 0),
             collider='box',
             unlit=True,
@@ -289,10 +294,11 @@ def load_map():
 
     spawn_data = data.get("spawn")
     if spawn_data:
+        visual_y = get_display_y('player_spawn')
         spawn = Entity(
             model='player_spawn.bam',
             scale=get_scale('player_spawn'),
-            position=(spawn_data['x'], 0, spawn_data['z']),
+            position=(spawn_data['x'], visual_y, spawn_data['z']),
             rotation_y=spawn_data.get('rot', 0),
             collider=None,
             unlit=True,
