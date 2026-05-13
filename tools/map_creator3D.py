@@ -10,7 +10,7 @@ from ursina.prefabs.first_person_controller import FirstPersonController
 from src.core.config import (
     GROUND_SCALE, MAP_HALF_SIZE, ASSETS_DIR, MODELS_DIR,
     STONE_SCALE, TARGET_SCALE, STATUE_SCALE, FLASHLIGHT_SCALE,
-    COTTAGE_SCALE, TREE_SCALE, NPC_SCALE
+    COTTAGE_SCALE, TREE_SCALE, NPC_SCALE, PLAYER_SPAWN_SCALE
 )
 from src.core.engine import init_engine
 from src.systems.map_loader import OBJECT_CONFIGS
@@ -22,7 +22,7 @@ app = init_engine()
 SCALE_CONFIG = {
     'tree': TREE_SCALE, 'stone': STONE_SCALE, 'cottage': COTTAGE_SCALE,
     'flashlight': FLASHLIGHT_SCALE, 'statue': STATUE_SCALE, 'target': TARGET_SCALE,
-    'npc': NPC_SCALE
+    'npc': NPC_SCALE, 'player_spawn': PLAYER_SPAWN_SCALE
 }
 MAP_FILE = ASSETS_DIR / 'map3D.json'
 GHOST_ROTATION_SPEED = 90
@@ -30,13 +30,13 @@ RAYCAST_DISTANCE = 100
 DELETE_RAYCAST_DISTANCE = 50
 
 current_type = [next(iter(OBJECT_CONFIGS.keys()), 'cube')]
-mode = ['place']
 ghost_enabled = True
 mouse_left_pressed = False
 mouse_right_pressed = False
 
 placed_objects = []
 placed_npcs = []
+player_spawn_data = None
 player_start_pos = Vec3(0, 1, 0)
 player_start_rot = 0.0
 ghost_entity = None
@@ -56,10 +56,25 @@ def get_scale(obj_type: str) -> float:
 def get_model(obj_type: str) -> str:
     if obj_type == 'npc':
         return 'droid.bam'
+    if obj_type == 'player_spawn':
+        return 'player_spawn.bam'
     return OBJECT_CONFIGS.get(obj_type, {}).get('model', 'cube')
 
 def get_y_offset(obj_type: str) -> float:
     return OBJECT_CONFIGS.get(obj_type, {}).get('y_offset', 0.0)
+
+def update_player_spawn():
+    global player_start_pos, player_start_rot, player_spawn_data
+    if player_spawn_data:
+        player_start_pos = Vec3(player_spawn_data['x'], 1, player_spawn_data['z'])
+        player_start_rot = player_spawn_data.get('rot', 0)
+        player.position = Vec3(player_start_pos.x, 1, player_start_pos.z)
+        print(f"Player spawn updated to: {player.position}, rotation: {player_start_rot}")
+    else:
+        player_start_pos = Vec3(0, 1, 0)
+        player_start_rot = 0
+        player.position = player_start_pos
+        print("No spawn point, using default position (0, 1, 0)")
 
 def create_ghost():
     global ghost_entity
@@ -73,14 +88,15 @@ def create_ghost():
         color=color.yellow,
         double_sided=True,
         unlit=True,
-        visible=True
+        visible=ghost_enabled
     )
     refresh_ghost_position()
 
 def refresh_ghost_position():
     global ghost_entity
-    if not ghost_entity or mode[0] in ('idle', 'player_start') or not ghost_enabled:
-        if ghost_entity: ghost_entity.enabled = False
+    if not ghost_entity or not ghost_enabled:
+        if ghost_entity:
+            ghost_entity.enabled = False
         return
 
     ghost_entity.enabled = True
@@ -89,39 +105,45 @@ def refresh_ghost_position():
     for lst in (placed_objects, placed_npcs):
         ignore_list.extend(obj['entity_ref'] for obj in lst if obj.get('entity_ref'))
 
+    if player_spawn_data and player_spawn_data.get('entity_ref'):
+        ignore_list.append(player_spawn_data['entity_ref'])
+
     hit = raycast(camera.world_position, camera.forward, distance=RAYCAST_DISTANCE, ignore=ignore_list)
 
     if hit.hit:
         x, z = hit.world_point.x, hit.world_point.z
-        y = 0.0 if current_type[0] == 'npc' else 1.0 + get_y_offset(current_type[0])
+        y = 0.0 if current_type[0] in ('npc', 'player_spawn') else 1.0 + get_y_offset(current_type[0])
         ghost_entity.position = Vec3(x, y, z)
     else:
         ghost_entity.enabled = False
 
 def place_object():
-    if mode[0] == 'idle' or not ghost_entity or not ghost_entity.enabled:
-        return
+    global player_spawn_data
 
-    if mode[0] == 'player_start':
-        pos = ghost_entity.position if ghost_entity.enabled else player.position
-        player.position = Vec3(pos.x, 1, pos.z)
-        player_start_pos.x, player_start_pos.z = pos.x, pos.z
-        print(f"Player start set to: {player.position}")
-        mode[0] = 'place'
-        create_ghost()
+    if not ghost_entity or not ghost_entity.enabled:
         return
 
     obj_type = current_type[0]
-    pos = Vec3(ghost_entity.position.x, 0, ghost_entity.position.z) if obj_type == 'npc' else ghost_entity.position
+
+    if obj_type in ('npc', 'player_spawn'):
+        pos = Vec3(ghost_entity.position.x, 0, ghost_entity.position.z)
+    else:
+        pos = Vec3(ghost_entity.position.x, 1, ghost_entity.position.z)
+
+    obj_color = color.white
+    if obj_type == 'player_spawn':
+        obj_color = color.cyan
+    elif obj_type == 'npc':
+        obj_color = color.orange
 
     obj = Entity(
         model=get_model(obj_type),
         scale=get_scale(obj_type),
         position=pos,
         rotation_y=ghost_entity.rotation_y,
-        collider='box',
+        collider='box' if obj_type not in ('player_spawn',) else None,
         unlit=True,
-        color=color.white
+        color=obj_color
     )
 
     data = {
@@ -130,12 +152,25 @@ def place_object():
         'entity_ref': obj
     }
 
-    target_list = placed_npcs if obj_type == 'npc' else placed_objects
-    target_list.append(data)
-    print(f"{'NPC' if obj_type == 'npc' else 'Object'} placed at {pos}")
+    if obj_type == 'npc':
+        placed_npcs.append(data)
+    elif obj_type == 'player_spawn':
+        if player_spawn_data:
+            if player_spawn_data.get('entity_ref'):
+                destroy(player_spawn_data['entity_ref'])
+            print("Old spawn point replaced")
+        player_spawn_data = data
+        update_player_spawn()
+    else:
+        placed_objects.append(data)
+
+    print(f"{obj_type} placed at {pos}")
 
 def delete_object():
-    hit = raycast(camera.world_position, camera.forward, distance=DELETE_RAYCAST_DISTANCE, ignore=(player, ghost_entity))
+    global player_spawn_data
+
+    hit = raycast(camera.world_position, camera.forward, distance=DELETE_RAYCAST_DISTANCE,
+                  ignore=(player, ghost_entity))
     if not hit.hit:
         return
 
@@ -143,43 +178,64 @@ def delete_object():
     if entity in (player, ghost_entity):
         return
 
-    for lst in (placed_objects, placed_npcs):
+    if player_spawn_data and player_spawn_data.get('entity_ref') is entity:
+        destroy(entity)
+        player_spawn_data = None
+        update_player_spawn()
+        print("Spawn point deleted")
+        return
+
+    for lst, lst_name in [(placed_objects, 'Object'), (placed_npcs, 'NPC')]:
         for i, obj_data in enumerate(lst):
             if obj_data.get('entity_ref') is entity:
                 destroy(entity)
                 lst.pop(i)
-                print(f"{'NPC' if obj_data['type'] == 'npc' else 'Object'} deleted successfully")
+                print(f"{lst_name} deleted successfully")
                 return
 
 def save_map():
     clean_objects = [{k: v for k, v in obj.items() if k != 'entity_ref'} for obj in placed_objects]
     clean_npcs = [{k: v for k, v in obj.items() if k != 'entity_ref'} for obj in placed_npcs]
 
+    clean_spawn = None
+    if player_spawn_data:
+        clean_spawn = {k: v for k, v in player_spawn_data.items() if k != 'entity_ref'}
+
     data = {
         "metadata": {
             "size": GROUND_SCALE, "grid_size": GROUND_SCALE,
-            "objects_count": len(clean_objects), "npcs_count": len(clean_npcs)
+            "objects_count": len(clean_objects),
+            "npcs_count": len(clean_npcs),
+            "has_spawn": clean_spawn is not None
         },
         "player_start": {
             "x": player_start_pos.x, "y": player_start_pos.y,
             "z": player_start_pos.z, "rot": player_start_rot
         },
         "objects": clean_objects,
-        "npcs": clean_npcs
+        "npcs": clean_npcs,
+        "spawn": clean_spawn
     }
 
     with open(MAP_FILE, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
-    print(f"Map Saved! {len(clean_objects)} objects, {len(clean_npcs)} NPCs")
+
+    spawn_status = "with spawn" if clean_spawn else "without spawn"
+    print(f"Map Saved! {len(clean_objects)} objects, {len(clean_npcs)} NPCs, {spawn_status}")
 
 def load_map():
-    global placed_objects, placed_npcs, player_start_pos, player_start_rot
+    global placed_objects, placed_npcs, player_spawn_data, player_start_pos, player_start_rot
 
     for obj in placed_objects + placed_npcs:
         if 'entity_ref' in obj:
             destroy(obj['entity_ref'])
+
+    if player_spawn_data and player_spawn_data.get('entity_ref'):
+        destroy(player_spawn_data['entity_ref'])
+
     placed_objects.clear()
     placed_npcs.clear()
+    player_spawn_data = None
 
     try:
         with open(MAP_FILE, 'r', encoding='utf-8') as f:
@@ -191,58 +247,72 @@ def load_map():
         print(f"JSON parsing error: {e}")
         return
 
-    p_start = data.get("player_start", {})
-    player_start_pos.x = p_start.get('x', 0)
-    player_start_pos.z = p_start.get('z', 0)
-    player_start_rot = p_start.get('rot', 0)
-    player.position = Vec3(player_start_pos.x, 1, player_start_pos.z)
-
     for obj_data in data.get("objects", []):
         obj_type = obj_data.get("type", "cube")
         obj = Entity(
-            model=get_model(obj_type), scale=obj_data.get('scale', get_scale(obj_type)),
+            model=get_model(obj_type),
+            scale=obj_data.get('scale', get_scale(obj_type)),
             position=(obj_data['x'], obj_data.get('y', 1), obj_data['z']),
-            rotation_y=obj_data.get('rot', 0), collider='box'
+            rotation_y=obj_data.get('rot', 0),
+            collider='box'
         )
         obj_data['entity_ref'] = obj
         placed_objects.append(obj_data)
 
     for npc_data in data.get("npcs", []):
         npc = Entity(
-            model='droid.bam', scale=get_scale('npc'),
+            model='droid.bam',
+            scale=get_scale('npc'),
             position=(npc_data['x'], 0, npc_data['z']),
-            collider='box', unlit=True, color=color.white
+            rotation_y=npc_data.get('rot', 0),
+            collider='box',
+            unlit=True,
+            color=color.orange
         )
         npc_data['y'] = 0
         npc_data['entity_ref'] = npc
         placed_npcs.append(npc_data)
 
-    print(f"Map Loaded: {len(placed_objects)} objects, {len(placed_npcs)} NPCs")
+    spawn_data = data.get("spawn")
+    if spawn_data:
+        spawn = Entity(
+            model='player_spawn.bam',
+            scale=get_scale('player_spawn'),
+            position=(spawn_data['x'], 0, spawn_data['z']),
+            rotation_y=spawn_data.get('rot', 0),
+            collider=None,
+            unlit=True,
+            color=color.cyan
+        )
+        spawn_data['entity_ref'] = spawn
+        player_spawn_data = spawn_data
+
+    update_player_spawn()
+
+    spawn_status = "with spawn" if player_spawn_data else "without spawn"
+    print(f"Map Loaded: {len(placed_objects)} objects, {len(placed_npcs)} NPCs, {spawn_status}")
 
 def input(key):
-    global ghost_enabled, mode, current_type
+    global ghost_enabled, current_type
 
-    if key in '1234567':
+    if key in '123456':
         idx = int(key) - 1
         types = list(OBJECT_CONFIGS.keys())
         if idx < len(types):
             current_type[0] = types[idx]
-            mode[0] = 'place'
             print(f"Selected: {current_type[0]}")
             create_ghost()
             return
 
     if key == 'n':
         current_type[0] = 'npc'
-        mode[0] = 'place'
-        print("Selected: npc")
+        print("Selected: NPC (orange)")
         create_ghost()
         return
 
-    if key == '0':
-        mode[0] = 'idle'
-        if ghost_entity: ghost_entity.enabled = False
-        print("Mode: IDLE")
+    if key == 'p':
+        current_type[0] = 'player_spawn'
+        create_ghost()
         return
 
     if key == 'escape':
@@ -250,15 +320,11 @@ def input(key):
 
     if key == 'g':
         ghost_enabled = not ghost_enabled
-        if ghost_entity: ghost_entity.enabled = ghost_enabled
-        if ghost_enabled: refresh_ghost_position()
+        if ghost_entity:
+            ghost_entity.enabled = ghost_enabled
+        if ghost_enabled:
+            refresh_ghost_position()
         print(f"Ghost: {'ON' if ghost_enabled else 'OFF'}")
-        return
-
-    if key == 'p':
-        mode[0] = 'player_start'
-        if ghost_entity: ghost_entity.enabled = False
-        print("Mode: Set Player Start")
         return
 
     if key == 's' and held_keys['control']:
@@ -287,7 +353,10 @@ def update():
         mouse_right_pressed = False
 
     if player.y < -10:
-        player.position = Vec3(0, 5, 0)
+        if player_spawn_data:
+            player.position = Vec3(player_spawn_data['x'], 1, player_spawn_data['z'])
+        else:
+            player.position = Vec3(0, 5, 0)
 
     player.x = clamp(player.x, -MAP_HALF_SIZE + 1, MAP_HALF_SIZE - 1)
     player.z = clamp(player.z, -MAP_HALF_SIZE + 1, MAP_HALF_SIZE - 1)
@@ -297,20 +366,22 @@ create_ghost()
 Text(
     text="""
         MAP EDITOR
-        1-6: Select Object
-        N:   Place NPC
-        0:   Hide Ghost
-        LMB: Place
-        RMB: Delete
-        Ctrl+S: Save
-        Ctrl+L: Load
-        P: Set player start
-        R: Rotate object
-        G: Toggle ghost
-        Q: Exit
+        1-6: Select Objects
+        N:   Place NPC (orange)
+        P:   Place Player Spawn (cyan) - only one
+        LMB: Place object
+        RMB: Delete object
+        R:   Rotate object
+        G:   Toggle ghost
+        Ctrl+S: Save map
+        Ctrl+L: Load map
+        ESC: Exit
     """,
-    position=(-0.85, 0.45), scale=1, color=color.white,
-    background=True, line_height=1.2
+    position=(-0.85, 0.45),
+    scale=1,
+    color=color.white,
+    background=True,
+    line_height=1.2
 )
 
 app.run()
