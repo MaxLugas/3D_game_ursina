@@ -12,7 +12,7 @@ from src.core.config import (
     SOUND_GLOCK_RELOAD,
     RELOAD_PITCH, MODELS_DIR
 )
-from src.shaders.comics_shader import weapon_shader_panda
+from src.shaders.shader_loader import weapon_shader_panda
 
 class FPSWeapon:
     def __init__(self, model_path=MODELS_DIR/GLOCK_WEAPON_MODEL, scale=GLOCK_WEAPON_SCALE):

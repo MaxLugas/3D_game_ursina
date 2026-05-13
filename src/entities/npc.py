@@ -11,7 +11,7 @@ from src.core.config import (
     NPC_IDLE_ANIM, NPC_ATTACK_ANIM_1, NPC_RUN_ANIM_2, NPC_SPEED_RUN_2, NPC_SKILL_SOUND, NPC_SKILL_SOUND_PITCH,
     NPC_WALK_SOUND, NPC_ATTACK_1_SOUND
 )
-from src.shaders.comics_shader import npc_shader_panda
+from src.shaders.shader_loader import npc_shader_panda
 from src.utils.object_setup import setup_collidable_object
 
 

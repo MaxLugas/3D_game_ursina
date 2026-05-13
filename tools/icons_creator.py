@@ -18,7 +18,7 @@ def create_icon_files():
     # Цвета | Colors
     colors = {
         'tree': (34, 170, 34),
-        'rock': (170, 85, 34),
+        'stone': (170, 85, 34),
         'cottage': (170, 68, 170),
         'statue': (170, 170, 255),
         'flashlight': (255, 255, 170),
@@ -35,12 +35,12 @@ def create_icon_files():
     pygame.draw.rect(surf, (139, 69, 19), (14, 18, 4, 12))
     pygame.image.save(surf, ICONS_DIR / "tree.png")
 
-    # Иконка камня | Rock icon
+    # Иконка камня | STONE icon
     surf = pygame.Surface((size, size), pygame.SRCALPHA)
-    pygame.draw.circle(surf, colors['rock'], (10, 18), 6)
-    pygame.draw.circle(surf, colors['rock'], (22, 18), 6)
-    pygame.draw.circle(surf, colors['rock'], (16, 12), 6)
-    pygame.image.save(surf, ICONS_DIR / "rock.png")
+    pygame.draw.circle(surf, colors['stone'], (10, 18), 6)
+    pygame.draw.circle(surf, colors['stone'], (22, 18), 6)
+    pygame.draw.circle(surf, colors['stone'], (16, 12), 6)
+    pygame.image.save(surf, ICONS_DIR / "stone.png")
 
     # Иконка домика | Cottage icon
     surf = pygame.Surface((size, size), pygame.SRCALPHA)

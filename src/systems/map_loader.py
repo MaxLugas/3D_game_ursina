@@ -1,22 +1,103 @@
 from ursina import *
 import json
-from src.shaders.comics_shader import comics_shaders
+from src.shaders.shader_loader import comics_shaders
 from src.utils.object_setup import setup_collidable_object
 from src.entities.npc import AnimatedNPC
 from src.core.config import (
-    ROCK_COLLIDER_SHRINK, TREE_COLLIDER_SHRINK, STATUE_COLLIDER_SHRINK,
+    STONE_COLLIDER_SHRINK, TREE_COLLIDER_SHRINK, STATUE_COLLIDER_SHRINK,
     ASSETS_DIR, GROUND_SCALE, COTTAGE_COLLIDER_SHRINK,
-    FLASHLIGHT_COLLIDER_SHRINK, TARGET_COLLIDER_SHRINK,
-    ROCK_COLOR, TREE_COLOR, COTTAGE_COLOR, FLASHLIGHT_COLOR,
-    STATUE_COLOR, TARGET_COLOR, SPECULAR_FACTOR,
-    NPC_SPEED_WALK, NPC_SPEED_RUN_1, MODELS_DIR,
+    FLASHLIGHT_COLLIDER_SHRINK, TARGET_COLLIDER_SHRINK, SPECULAR_FACTOR,
+    NPC_SPEED_WALK, NPC_SPEED_RUN_1, MODELS_DIR, MAP_FILENAME,
     NPC_IDLE_ANIM, NPC_WALK_ANIM, NPC_RUN_ANIM_1, NPC_SKILL_ANIM, NPC_SCALE, NPC_SKILL_SOUND, NPC_WALK_SOUND,
-    NPC_ATTACK_1_SOUND
+    NPC_ATTACK_1_SOUND, STONE_SCALE, TARGET_SCALE, STATUE_SCALE, FLASHLIGHT_SCALE, COTTAGE_SCALE, TREE_SCALE
 )
 
+# === Конфигурация объектов мира | World objects configuration ===
+OBJECT_CONFIGS = {
+    "stone": {
+        "model": "stone",
+        "scale": STONE_SCALE,
+        "shrink_factor": STONE_COLLIDER_SHRINK,
+        "y_offset": 0,
+        "enabled": False
+    },
+    "target": {
+        "model": "target",
+        "scale": TARGET_SCALE,
+        "shrink_factor": TARGET_COLLIDER_SHRINK,
+        "y_offset": 0,
+        "enabled": False
+    },
+    "tree": {
+        "model": "tree",
+        "scale": TREE_SCALE,
+        "shrink_factor": TREE_COLLIDER_SHRINK,
+        "y_offset": 0,
+        "has_specular": True,
+        "enabled": False
+    },
+    "cottage": {
+        "model": "cottage",
+        "scale": COTTAGE_SCALE,
+        "shrink_factor": COTTAGE_COLLIDER_SHRINK,
+        "y_offset": 0,
+        "enabled": False
+    },
+    "flashlight": {
+        "model": "flashlight",
+        "scale": FLASHLIGHT_SCALE,
+        "shrink_factor": FLASHLIGHT_COLLIDER_SHRINK,
+        "y_offset": 0,
+        "enabled": False
+    },
+    "statue": {
+        "model": "statue",
+        "scale": STATUE_SCALE,
+        "shrink_factor": None,
+        "collider": "box",
+        "y_offset": 0,
+        "is_statue": True,
+        "enabled": True
+    }
+}
 
 
-def load_map(filename='map_orig.json', player=None, load_npcs=True, verbose=True):
+def create_world_object(obj_type, x, y, z, rot, verbose=True):
+    """
+    Создание объекта мира по типу
+    Create world object by type
+
+    Returns:
+        Entity or None: созданный объект или None при ошибке
+    """
+    if obj_type not in OBJECT_CONFIGS:
+        if verbose:
+            print(f"⚠️ Неизвестный тип объекта: {obj_type} | Unknown object type: {obj_type}")
+        return None
+
+    config = OBJECT_CONFIGS[obj_type]
+
+    entity = Entity(
+        model=config["model"],
+        scale=config["scale"],
+        position=(x, y + config.get("y_offset", 0), z),
+        rotation=(0, rot, 0),
+        shader=comics_shaders,
+        enabled=config.get("enabled", False)
+    )
+
+    if config.get("shrink_factor") is not None:
+        invoke(setup_collidable_object, entity, shrink_factor=config["shrink_factor"], delay=0)
+    elif config.get("collider"):
+        entity.collider = config["collider"]
+
+    if config.get("is_statue"):
+        entity.is_statue = True
+
+    return entity
+
+
+def load_map(filename=MAP_FILENAME, player=None, load_npcs=True, verbose=True):
     """
     Загрузка карты из JSON файла
     Load map from JSON file
@@ -74,7 +155,7 @@ def load_map(filename='map_orig.json', player=None, load_npcs=True, verbose=True
         print(f"📦 Загрузка {len(objects_data)} объектов... | Loading {len(objects_data)} objects...")
 
     for i, obj in enumerate(objects_data, 1):
-        obj_type = obj.get("type", "rock")
+        obj_type = obj.get("type", "stone")
         x = float(obj.get("x", 0)) * scale_factor
         z = float(obj.get("z", 0)) * scale_factor
         y = float(obj.get("y", 3.0))
@@ -86,110 +167,17 @@ def load_map(filename='map_orig.json', player=None, load_npcs=True, verbose=True
         x_clamped = clamp(x, -map_half + 2.0, map_half - 2.0)
         z_clamped = clamp(z, -map_half + 2.0, map_half - 2.0)
 
-        if x != x_clamped or z != z_clamped and verbose:
+        if (x != x_clamped or z != z_clamped) and verbose:
             print(
                 f"⚠️ Объект {i} ({obj_type}) прижат к границе: ({x:.1f}, {z:.1f}) -> ({x_clamped:.1f}, {z_clamped:.1f}) | Object clamped to boundary")
 
         x, z = x_clamped, z_clamped
 
-        # Создание объектов по типу | Create objects by type
-        if obj_type == "rock":
-            entity = Entity(
-                model='rock',
-                texture='rock',
-                scale=2,
-                position=(x, y, z),
-                rotation=(0, rot, 0),  # Добавлен поворот по Y
-                shader=comics_shaders,
-                color=ROCK_COLOR,
-                enabled=False
-            )
-            entity.color = entity.color.tint(0.3)
-            entity.set_shader_input("specular_factor", SPECULAR_FACTOR)
-            invoke(setup_collidable_object, entity, shrink_factor=ROCK_COLLIDER_SHRINK, delay=0)
+        # Создание объекта через фабрику | Create object via factory
+        entity = create_world_object(obj_type, x, y, z, rot, verbose)
+        if entity:
             world_entities.append(entity)
 
-        elif obj_type == "target":
-            entity = Entity(
-                model='target',
-                texture='target',
-                position=(x, y, z),
-                rotation=(0, rot, 0),  # Добавлен поворот по Y
-                shader=comics_shaders,
-                color=TARGET_COLOR,
-                enabled=False
-            )
-            entity.color = entity.color.tint(0.2)
-            entity.set_shader_input("specular_factor", SPECULAR_FACTOR)
-            invoke(setup_collidable_object, entity, shrink_factor=TARGET_COLLIDER_SHRINK, delay=0)
-            world_entities.append(entity)
-
-        elif obj_type == "tree":
-            entity = Entity(
-                model='tree',
-                texture='tree',
-                scale=2,
-                position=(x, y, z),
-                rotation=(0, rot, 0),  # Добавлен поворот по Y
-                shader=comics_shaders,
-                color=TREE_COLOR,
-                enabled=False
-            )
-            entity.color = entity.color.tint(0.2)
-            entity.set_shader_input("specular_factor", SPECULAR_FACTOR)
-            invoke(setup_collidable_object, entity, shrink_factor=TREE_COLLIDER_SHRINK, delay=0)
-            world_entities.append(entity)
-
-        elif obj_type == "cottage":
-            entity = Entity(
-                model='cottage',
-                texture='cottage',
-                scale=5,
-                position=(x, y, z),
-                rotation=(0, rot, 0),  # Добавлен поворот по Y
-                shader=comics_shaders,
-                color=COTTAGE_COLOR,
-                enabled=False
-            )
-            entity.color = entity.color.tint(0.4)
-            entity.set_shader_input("specular_factor", SPECULAR_FACTOR)
-            invoke(setup_collidable_object, entity, shrink_factor=COTTAGE_COLLIDER_SHRINK, delay=0)
-            world_entities.append(entity)
-
-        elif obj_type == "flashlight":
-            entity = Entity(
-                model='flashlight',
-                texture='flashlight',
-                scale=3,
-                position=(x, y, z),
-                rotation=(0, rot, 0),  # Добавлен поворот по Y
-                shader=comics_shaders,
-                color=FLASHLIGHT_COLOR,
-                enabled=False
-            )
-            entity.color = entity.color.tint(0.3)
-            entity.set_shader_input("specular_factor", SPECULAR_FACTOR)
-            invoke(setup_collidable_object, entity, shrink_factor=FLASHLIGHT_COLLIDER_SHRINK, delay=0)
-            world_entities.append(entity)
-
-        elif obj_type == "statue":
-            statue = Entity(
-                model='statue',
-                texture='statue',
-                scale=0.5,
-                position=(x, 0.5, z),
-                rotation=(0, rot, 0),
-                shader=comics_shaders,
-                color=STATUE_COLOR
-            )
-
-            statue.color = statue.color.tint(0.2)
-            statue.set_shader_input("specular_factor", SPECULAR_FACTOR)
-
-            statue.collider = 'box'
-            statue.is_statue = True
-
-            world_entities.append(statue)
     if verbose:
         print(f"✅ Создано {len(world_entities)} объектов | Created {len(world_entities)} objects")
 
