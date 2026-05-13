@@ -92,6 +92,15 @@ def create_ghost():
     )
     refresh_ghost_position()
 
+def get_object_y(obj_type: str) -> float:
+    """Возвращает высоту размещения объекта в зависимости от его масштаба"""
+    if obj_type in ('npc', 'player_spawn'):
+        return 0.0
+
+    scale = get_scale(obj_type)
+    base_y = scale if scale != 1.0 else 1.0
+    return base_y + get_y_offset(obj_type)
+
 def refresh_ghost_position():
     global ghost_entity
     if not ghost_entity or not ghost_enabled:
@@ -112,7 +121,12 @@ def refresh_ghost_position():
 
     if hit.hit:
         x, z = hit.world_point.x, hit.world_point.z
-        y = 0.0 if current_type[0] in ('npc', 'player_spawn') else 1.0 + get_y_offset(current_type[0])
+
+        if current_type[0] in ('npc', 'player_spawn'):
+            y = 0.0
+        else:
+            y = get_object_y(current_type[0])
+
         ghost_entity.position = Vec3(x, y, z)
     else:
         ghost_entity.enabled = False
@@ -128,7 +142,7 @@ def place_object():
     if obj_type in ('npc', 'player_spawn'):
         pos = Vec3(ghost_entity.position.x, 0, ghost_entity.position.z)
     else:
-        pos = Vec3(ghost_entity.position.x, 1, ghost_entity.position.z)
+        pos = Vec3(ghost_entity.position.x, get_object_y(obj_type), ghost_entity.position.z)
 
     obj_color = color.white
     if obj_type == 'player_spawn':
