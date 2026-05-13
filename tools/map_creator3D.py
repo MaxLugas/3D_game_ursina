@@ -68,12 +68,12 @@ def update_player_spawn():
     if player_spawn_data:
         player_start_pos = Vec3(player_spawn_data['x'], 1, player_spawn_data['z'])
         player_start_rot = player_spawn_data.get('rot', 0)
-        player.position = Vec3(player_start_pos.x, 1, player_start_pos.z)
+        # player.position = Vec3(player_start_pos.x, 1, player_start_pos.z)
         print(f"Player spawn updated to: {player.position}, rotation: {player_start_rot}")
     else:
         player_start_pos = Vec3(0, 1, 0)
         player_start_rot = 0
-        player.position = player_start_pos
+        # player.position = player_start_pos
         print("No spawn point, using default position (0, 1, 0)")
 
 def create_ghost():
@@ -149,10 +149,6 @@ def place_object():
     pos = Vec3(ghost_entity.position.x, get_display_y(obj_type), ghost_entity.position.z)
 
     obj_color = color.white
-    if obj_type == 'player_spawn':
-        obj_color = color.cyan
-    elif obj_type == 'npc':
-        obj_color = color.orange
 
     obj = Entity(
         model=get_model(obj_type),
@@ -286,7 +282,7 @@ def load_map():
             rotation_y=npc_data.get('rot', 0),
             collider='box',
             unlit=True,
-            color=color.orange
+            color=color.white
         )
         npc_data['y'] = 0
         npc_data['entity_ref'] = npc
@@ -302,7 +298,7 @@ def load_map():
             rotation_y=spawn_data.get('rot', 0),
             collider=None,
             unlit=True,
-            color=color.cyan
+            color=color.yellow
         )
         spawn_data['entity_ref'] = spawn
         player_spawn_data = spawn_data
@@ -326,7 +322,6 @@ def input(key):
 
     if key == 'n':
         current_type[0] = 'npc'
-        print("Selected: NPC (orange)")
         create_ghost()
         return
 
@@ -387,8 +382,8 @@ Text(
     text="""
         MAP EDITOR
         1-6: Select Objects
-        N:   Place NPC (orange)
-        P:   Place Player Spawn (cyan) - only one
+        N:   NPC
+        P:   Player Spawn
         LMB: Place object
         RMB: Delete object
         R:   Rotate object
