@@ -62,6 +62,11 @@ OBJECT_CONFIGS = {
 }
 
 
+def _clamp_coords(x, z, half_size, offset=2.0):
+    """Ограничивает координаты в пределах границ карты. | Clamps coordinates within map boundaries."""
+    return clamp(x, -half_size + offset, half_size - offset), clamp(z, -half_size + offset, half_size - offset)
+
+
 def create_world_object(obj_type, x, y, z, rot, verbose=True):
     """
     Создание объекта мира по типу
@@ -97,6 +102,22 @@ def create_world_object(obj_type, x, y, z, rot, verbose=True):
     return entity
 
 
+def get_player_start(filename=MAP_FILENAME):
+    filepath = ASSETS_DIR / filename
+    try:
+        with open(filepath, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        player_start_data = data.get("player_start", {})
+        return {
+            'x': float(player_start_data.get('x', 0)),
+            'y': float(player_start_data.get('y', 1.0)),
+            'z': float(player_start_data.get('z', 0)),
+            'rot': float(player_start_data.get('rot', 0))
+        }
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {'x': 0, 'y': 1.0, 'z': 0, 'rot': 0}
+
+
 def load_map(filename=MAP_FILENAME, player=None, load_npcs=True, verbose=True):
     """
     Загрузка карты из JSON файла
@@ -111,7 +132,6 @@ def load_map(filename=MAP_FILENAME, player=None, load_npcs=True, verbose=True):
     """
     world_entities = []  # Список всех созданных игровых объектов | List of all created game entities
     npcs = []  # Список созданных NPC | List of created NPCs
-    player_start = {'x': 0, 'z': 0, 'y': 1.0}  # Стартовая позиция по умолчанию | Default player start position
 
     filepath = ASSETS_DIR / filename
 
@@ -123,23 +143,17 @@ def load_map(filename=MAP_FILENAME, player=None, load_npcs=True, verbose=True):
         if verbose:
             print(
                 f"❌ Файл {filepath} не найден. Используются настройки по умолчанию. | File {filepath} not found. Using default settings.")
-        return world_entities, npcs, player_start
+        return world_entities, npcs, get_player_start()
     except json.JSONDecodeError as e:
         if verbose:
             print(f"❌ Ошибка парсинга JSON: {e} | JSON parsing error: {e}")
-        return world_entities, npcs, player_start
+        return world_entities, npcs, get_player_start()
 
     # === Загрузка стартовой позиции игрока | Load player start position ===
-    player_start_data = data.get("player_start", {})
-    if player_start_data:
-        player_start = {
-            'x': float(player_start_data.get('x', 0)),
-            'z': float(player_start_data.get('z', 0)),
-            'y': float(player_start_data.get('y', 1.0))
-        }
-        if verbose:
-            print(
-                f"🚩 Загружена стартовая позиция игрока: ({player_start['x']:.1f}, {player_start['y']:.1f}, {player_start['z']:.1f}) | Player start position loaded")
+    player_start = get_player_start(filename)
+    if verbose:
+        print(
+            f"🚩 Загружена стартовая позиция игрока: ({player_start['x']:.1f}, {player_start['y']:.1f}, {player_start['z']:.1f}) | Player start position loaded")
 
     # === Масштабирование координат | Scale coordinates ===
     base_map_size = data.get("metadata", {}).get("size", 100)
@@ -164,14 +178,7 @@ def load_map(filename=MAP_FILENAME, player=None, load_npcs=True, verbose=True):
         rot = float(obj.get("rot", 0))
 
         # Прижатие к границам | Clamp to boundaries
-        x_clamped = clamp(x, -map_half + 2.0, map_half - 2.0)
-        z_clamped = clamp(z, -map_half + 2.0, map_half - 2.0)
-
-        if (x != x_clamped or z != z_clamped) and verbose:
-            print(
-                f"⚠️ Объект {i} ({obj_type}) прижат к границе: ({x:.1f}, {z:.1f}) -> ({x_clamped:.1f}, {z_clamped:.1f}) | Object clamped to boundary")
-
-        x, z = x_clamped, z_clamped
+        x, z = _clamp_coords(x, z, map_half)
 
         # Создание объекта через фабрику | Create object via factory
         entity = create_world_object(obj_type, x, y, z, rot, verbose)
@@ -195,8 +202,7 @@ def load_map(filename=MAP_FILENAME, player=None, load_npcs=True, verbose=True):
                 y = float(npc_data.get("y", 0.0))
 
                 # Прижатие к границам | Clamp to boundaries
-                x = clamp(x, -map_half + 2.0, map_half - 2.0)
-                z = clamp(z, -map_half + 2.0, map_half - 2.0)
+                x, z = _clamp_coords(x, z, map_half)
 
                 if player:
                     npc = AnimatedNPC(

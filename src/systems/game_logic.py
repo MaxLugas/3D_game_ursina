@@ -39,16 +39,4 @@ class GameLogic:
         # Взаимодействие с NPC | NPC interaction
         for npc in self.npcs:
             if distance(self.player.position, npc.get_position()) < 1.5:
-                if not hasattr(npc, 'talked'):          # Однократное взаимодействие | One-time interaction
-                    msg = Text(
-                        text='Run!',
-                        origin=(0, 0),
-                        y=0.1,
-                        scale=1.2,
-                        color=color.red,
-                        background=True
-                    )
-                    # Плавное исчезновение текста | Smooth fade-out text
-                    msg.animate('color', color.rgba(255, 0, 0, 0), duration=2.0, curve=curve.out_expo)
-                    invoke(destroy, msg, delay=0.8)     # Автоудаление сообщения | Auto-destroy message
-                    npc.talked = True
+                npc.trigger_interaction()

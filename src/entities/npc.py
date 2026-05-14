@@ -690,6 +690,22 @@ class AnimatedNPC:
         else:
             print(f"⚠️ Неверное состояние: {new_state} | Invalid state: {new_state}")
 
+    def trigger_interaction(self):
+        """Вызывается при взаимодействии игрока с NPC. | Called when player interacts with NPC."""
+        if hasattr(self, 'talked') and self.talked:
+            return
+        self.talked = True
+        msg = Text(
+            text='Run!',
+            origin=(0, 0),
+            y=0.1,
+            scale=1.2,
+            color=color.red,
+            background=True
+        )
+        msg.animate('color', color.rgba(255, 0, 0, 0), duration=2.0, curve=curve.out_expo)
+        invoke(destroy, msg, delay=0.8)
+
     def reset_skill_flag(self):
         """
         Сброс флага использования скилла (если нужно)
