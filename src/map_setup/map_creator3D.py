@@ -33,6 +33,11 @@ current_type = [next(iter(OBJECT_CONFIGS.keys()), 'cube')]
 ghost_enabled = True
 mouse_left_pressed = False
 mouse_right_pressed = False
+snap_to_grid = False
+show_grid = True
+grid_size = GROUND_SCALE
+cell_size = GROUND_SCALE / grid_size
+grid_entities = []
 
 placed_objects = []
 placed_npcs = []
@@ -49,6 +54,91 @@ player = FirstPersonController(
     mouse_sensitivity=Vec2(40, 40),
     position=player_start_pos
 )
+
+info_panel = """
+=== MAP EDITOR ===
+
+[OBJECTS]                           [CONTROLS]
+1: Stone    2: Tree    3: Cottage   LMB: Place    RMB: Delete
+4: Lamp     5: Statue  6: Target    R: Rotate     G: Ghost mode
+N: NPC      P: Spawn                X: Snap       H: Grid
+                                    Ctrl+S: Save  Ctrl+L: Load
+                                    ESC: Exit
+
+[CURRENT]
+Type: {current}
+Ghost: {ghost}
+Snap: {snap}
+Grid: {grid}
+Objects: {obj_count}
+NPCs: {npc_count}
+Spawn: {spawn_status}
+"""
+
+
+def update_ui_text():
+    """Обновляет текст интерфейса"""
+    ghost_status = "ON" if ghost_enabled else "OFF"
+    spawn_status = "YES" if player_spawn_data else "NO"
+    snap_status = "ON" if snap_to_grid else "OFF"
+    grid_status = "ON" if show_grid else "OFF"
+
+    ui_text.text = info_panel.format(
+        current=current_type[0].upper(),
+        ghost=ghost_status,
+        snap=snap_status,
+        grid=grid_status,
+        obj_count=len(placed_objects),
+        npc_count=len(placed_npcs),
+        spawn_status=spawn_status
+    )
+
+
+ui_text = Text(
+    text="",
+    position=(-0.85, 0.45),
+    scale=0.7,
+    color=color.white,
+    background=True,
+    background_color=color.rgba(0, 0, 0, 0.7),
+    line_height=1.2,
+    font='VeraMono.ttf'
+)
+
+update_ui_text()
+
+def create_grid_visual():
+    global grid_entities
+    for e in grid_entities:
+        destroy(e)
+    grid_entities.clear()
+
+    half = GROUND_SCALE // 2
+    step = 1
+    grid_color = color.rgba(100, 100, 100, 60)
+
+    for i in range(-half, half + 1, step):
+        line_x = Entity(
+            model='cube',
+            scale=(GROUND_SCALE, 0.002, 0.002),
+            position=(0, 0.005, i),
+            color=grid_color,
+            unlit=True,
+            collider=None,
+            enabled=show_grid
+        )
+        grid_entities.append(line_x)
+
+        line_z = Entity(
+            model='cube',
+            scale=(0.002, 0.002, GROUND_SCALE),
+            position=(i, 0.005, 0),
+            color=grid_color,
+            unlit=True,
+            collider=None,
+            enabled=show_grid
+        )
+        grid_entities.append(line_z)
 
 def get_scale(obj_type: str) -> float:
     return SCALE_CONFIG.get(obj_type) or OBJECT_CONFIGS.get(obj_type, {}).get('scale', 1.0)
@@ -68,12 +158,10 @@ def update_player_spawn():
     if player_spawn_data:
         player_start_pos = Vec3(player_spawn_data['x'], 1, player_spawn_data['z'])
         player_start_rot = player_spawn_data.get('rot', 0)
-        # player.position = Vec3(player_start_pos.x, 1, player_start_pos.z)
         print(f"Player spawn updated to: {player.position}, rotation: {player_start_rot}")
     else:
         player_start_pos = Vec3(0, 1, 0)
         player_start_rot = 0
-        # player.position = player_start_pos
         print("No spawn point, using default position (0, 1, 0)")
 
 def create_ghost():
@@ -94,7 +182,6 @@ def create_ghost():
 
 
 def get_display_y(obj_type: str) -> float:
-    """Возвращает высоту для визуального отображения объекта (с учетом масштаба)"""
     scale = get_scale(obj_type)
 
     if obj_type in ('npc', 'player_spawn'):
@@ -105,7 +192,6 @@ def get_display_y(obj_type: str) -> float:
 
 
 def get_save_y(obj_type: str) -> float:
-    """Возвращает высоту для сохранения в JSON"""
     if obj_type in ('npc', 'player_spawn'):
         return 0.0
 
@@ -133,6 +219,14 @@ def refresh_ghost_position():
 
     if hit.hit:
         x, z = hit.world_point.x, hit.world_point.z
+
+        if snap_to_grid:
+            half = GROUND_SCALE // 2
+            gx = round((x + half) / cell_size)
+            gz = round((z + half) / cell_size)
+            x = gx * cell_size - half
+            z = gz * cell_size - half
+
         y = get_display_y(current_type[0])
         ghost_entity.position = Vec3(x, y, z)
     else:
@@ -179,6 +273,8 @@ def place_object():
     else:
         placed_objects.append(data)
 
+    update_ui_text()
+
 def delete_object():
     global player_spawn_data
 
@@ -196,6 +292,7 @@ def delete_object():
         player_spawn_data = None
         update_player_spawn()
         print("Spawn point deleted")
+        update_ui_text()
         return
 
     for lst, lst_name in [(placed_objects, 'Object'), (placed_npcs, 'NPC')]:
@@ -204,6 +301,7 @@ def delete_object():
                 destroy(entity)
                 lst.pop(i)
                 print(f"{lst_name} deleted successfully")
+                update_ui_text()
                 return
 
 def save_map():
@@ -255,9 +353,11 @@ def load_map():
             data = json.load(f)
     except FileNotFoundError:
         print("Map file not found!")
+        update_ui_text()
         return
     except json.JSONDecodeError as e:
         print(f"JSON parsing error: {e}")
+        update_ui_text()
         return
 
     for obj_data in data.get("objects", []):
@@ -308,8 +408,10 @@ def load_map():
     spawn_status = "with spawn" if player_spawn_data else "without spawn"
     print(f"Map Loaded: {len(placed_objects)} objects, {len(placed_npcs)} NPCs, {spawn_status}")
 
+    update_ui_text()
+
 def input(key):
-    global ghost_enabled, current_type
+    global ghost_enabled, current_type, snap_to_grid, show_grid
 
     if key in '123456':
         idx = int(key) - 1
@@ -318,16 +420,33 @@ def input(key):
             current_type[0] = types[idx]
             print(f"Selected: {current_type[0]}")
             create_ghost()
+            update_ui_text()
             return
 
     if key == 'n':
         current_type[0] = 'npc'
         create_ghost()
+        update_ui_text()
         return
 
     if key == 'p':
         current_type[0] = 'player_spawn'
         create_ghost()
+        update_ui_text()
+        return
+
+    if key == 'x':
+        snap_to_grid = not snap_to_grid
+        print(f"Snap to grid: {'ON' if snap_to_grid else 'OFF'}")
+        update_ui_text()
+        return
+
+    if key == 'h':
+        show_grid = not show_grid
+        for e in grid_entities:
+            e.enabled = show_grid
+        print(f"Grid: {'ON' if show_grid else 'OFF'}")
+        update_ui_text()
         return
 
     if key == 'escape':
@@ -340,6 +459,7 @@ def input(key):
         if ghost_enabled:
             refresh_ghost_position()
         print(f"Ghost: {'ON' if ghost_enabled else 'OFF'}")
+        update_ui_text()
         return
 
     if key == 's' and held_keys['control']:
@@ -376,27 +496,7 @@ def update():
     player.x = clamp(player.x, -MAP_HALF_SIZE + 1, MAP_HALF_SIZE - 1)
     player.z = clamp(player.z, -MAP_HALF_SIZE + 1, MAP_HALF_SIZE - 1)
 
+create_grid_visual()
 create_ghost()
-
-Text(
-    text="""
-        MAP EDITOR
-        1-6: Select Objects
-        N:   NPC
-        P:   Player Spawn
-        LMB: Place object
-        RMB: Delete object
-        R:   Rotate object
-        G:   Toggle ghost
-        Ctrl+S: Save map
-        Ctrl+L: Load map
-        ESC: Exit
-    """,
-    position=(-0.85, 0.45),
-    scale=1,
-    color=color.white,
-    background=True,
-    line_height=1.2
-)
 
 app.run()

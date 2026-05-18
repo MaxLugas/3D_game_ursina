@@ -6,15 +6,14 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.core.engine import init_engine
-from src.systems.map_loader import load_map
+from src.systems.map_loader import load_map, get_player_start
 from src.systems.game_logic import GameLogic
 from src.entities.player import create_player
 from ursina import *
-import json as json_module
 from src.systems.minimap import Minimap
 from src.entities.weapon import FPSWeapon
 from src.core.config import PLAYER_SPEED, PLAYER_SECOND_JUMP_HEIGHT, MAP_HALF_SIZE, PLAYER_GRAVITY, \
-    PLAYER_MOUSE_SENSITIVITY, GLOCK_WEAPON_MODEL, GLOCK_WEAPON_SCALE, ASSETS_DIR, MAP_FILENAME
+    PLAYER_MOUSE_SENSITIVITY, GLOCK_WEAPON_MODEL, GLOCK_WEAPON_SCALE, MAP_FILENAME
 
 game_logic = None
 player = None
@@ -28,21 +27,7 @@ def main():
     # Временная метка для измерения времени загрузки карты и появления мира
     _start_load = time.time()
 
-    # Читаем стартовую позицию игрока напрямую из JSON | Read player start position directly from JSON
-    filepath = ASSETS_DIR / MAP_FILENAME
-    try:
-        with open(filepath, 'r', encoding='utf-8') as f:
-            data = json_module.load(f)
-        player_start_data = data.get("player_start", {})
-        player_start = {
-            'x': float(player_start_data.get('x', 0)),
-            'y': float(player_start_data.get('y', 1.0)),
-            'z': float(player_start_data.get('z', 0)),
-            'rot': float(player_start_data.get('rot', 0))
-        }
-    except (FileNotFoundError, json_module.JSONDecodeError):
-        player_start = {'x': 0, 'y': 1.0, 'z': 0, 'rot': 0}
-
+    player_start = get_player_start()
     player = create_player(
         speed=PLAYER_SPEED,
         second_jump_height=PLAYER_SECOND_JUMP_HEIGHT,
@@ -57,7 +42,6 @@ def main():
 
     # Загружаем карту один раз с созданным игроком | Load map once with created player
     world_entities, npcs_from_map, _ = load_map(MAP_FILENAME, player=player, load_npcs=True)
-    # Замерение времени после загрузки карты
     _load_duration = time.time() - _start_load
     print(f"[load-time] Карта загружена за {_load_duration:.3f} сек")
 
