@@ -50,6 +50,57 @@ player = FirstPersonController(
     position=player_start_pos
 )
 
+# ============= УЛУЧШЕННЫЙ UI =============
+info_panel = """
+=== MAP EDITOR ===
+
+[OBJECTS]
+1: Stone    2: Tree    3: Cottage
+4: Lamp     5: Statue  6: Target
+N: NPC      P: Spawn Point
+
+[CONTROLS]
+LMB: Place    RMB: Delete
+R: Rotate     G: Ghost mode
+Ctrl+S: Save  Ctrl+L: Load
+ESC: Exit
+
+[CURRENT]
+Type: {current}
+Ghost: {ghost}
+Objects: {obj_count}
+NPCs: {npc_count}
+Spawn: {spawn_status}
+"""
+
+
+def update_ui_text():
+    """Обновляет текст интерфейса"""
+    ghost_status = "ON" if ghost_enabled else "OFF"
+    spawn_status = "YES" if player_spawn_data else "NO"
+
+    ui_text.text = info_panel.format(
+        current=current_type[0].upper(),
+        ghost=ghost_status,
+        obj_count=len(placed_objects),
+        npc_count=len(placed_npcs),
+        spawn_status=spawn_status
+    )
+
+
+ui_text = Text(
+    text="",
+    position=(-0.85, 0.45),
+    scale=0.7,
+    color=color.white,
+    background=True,
+    background_color=color.rgba(0, 0, 0, 0.7),
+    line_height=1.2,
+    font='VeraMono.ttf'
+)
+
+update_ui_text()
+
 def get_scale(obj_type: str) -> float:
     return SCALE_CONFIG.get(obj_type) or OBJECT_CONFIGS.get(obj_type, {}).get('scale', 1.0)
 
@@ -68,12 +119,10 @@ def update_player_spawn():
     if player_spawn_data:
         player_start_pos = Vec3(player_spawn_data['x'], 1, player_spawn_data['z'])
         player_start_rot = player_spawn_data.get('rot', 0)
-        # player.position = Vec3(player_start_pos.x, 1, player_start_pos.z)
         print(f"Player spawn updated to: {player.position}, rotation: {player_start_rot}")
     else:
         player_start_pos = Vec3(0, 1, 0)
         player_start_rot = 0
-        # player.position = player_start_pos
         print("No spawn point, using default position (0, 1, 0)")
 
 def create_ghost():
@@ -179,6 +228,8 @@ def place_object():
     else:
         placed_objects.append(data)
 
+    update_ui_text()
+
 def delete_object():
     global player_spawn_data
 
@@ -196,6 +247,7 @@ def delete_object():
         player_spawn_data = None
         update_player_spawn()
         print("Spawn point deleted")
+        update_ui_text()
         return
 
     for lst, lst_name in [(placed_objects, 'Object'), (placed_npcs, 'NPC')]:
@@ -204,6 +256,7 @@ def delete_object():
                 destroy(entity)
                 lst.pop(i)
                 print(f"{lst_name} deleted successfully")
+                update_ui_text()
                 return
 
 def save_map():
@@ -255,9 +308,11 @@ def load_map():
             data = json.load(f)
     except FileNotFoundError:
         print("Map file not found!")
+        update_ui_text()
         return
     except json.JSONDecodeError as e:
         print(f"JSON parsing error: {e}")
+        update_ui_text()
         return
 
     for obj_data in data.get("objects", []):
@@ -308,6 +363,8 @@ def load_map():
     spawn_status = "with spawn" if player_spawn_data else "without spawn"
     print(f"Map Loaded: {len(placed_objects)} objects, {len(placed_npcs)} NPCs, {spawn_status}")
 
+    update_ui_text()
+
 def input(key):
     global ghost_enabled, current_type
 
@@ -318,16 +375,19 @@ def input(key):
             current_type[0] = types[idx]
             print(f"Selected: {current_type[0]}")
             create_ghost()
+            update_ui_text()
             return
 
     if key == 'n':
         current_type[0] = 'npc'
         create_ghost()
+        update_ui_text()
         return
 
     if key == 'p':
         current_type[0] = 'player_spawn'
         create_ghost()
+        update_ui_text()
         return
 
     if key == 'escape':
@@ -340,6 +400,7 @@ def input(key):
         if ghost_enabled:
             refresh_ghost_position()
         print(f"Ghost: {'ON' if ghost_enabled else 'OFF'}")
+        update_ui_text()
         return
 
     if key == 's' and held_keys['control']:
@@ -377,26 +438,5 @@ def update():
     player.z = clamp(player.z, -MAP_HALF_SIZE + 1, MAP_HALF_SIZE - 1)
 
 create_ghost()
-
-Text(
-    text="""
-        MAP EDITOR
-        1-6: Select Objects
-        N:   NPC
-        P:   Player Spawn
-        LMB: Place object
-        RMB: Delete object
-        R:   Rotate object
-        G:   Toggle ghost
-        Ctrl+S: Save map
-        Ctrl+L: Load map
-        ESC: Exit
-    """,
-    position=(-0.85, 0.45),
-    scale=1,
-    color=color.white,
-    background=True,
-    line_height=1.2
-)
 
 app.run()
