@@ -106,7 +106,6 @@ class MapEditor:
 
         print(f"Загрузка иконок из папки | Load icons from folder: {ICONS_DIR}")
 
-        # Проверяем, существует ли папка
         if not ICONS_DIR.exists():
             print(f"⚠️ Папка с иконками не найдена | No icons folder: {ICONS_DIR}")
             return
