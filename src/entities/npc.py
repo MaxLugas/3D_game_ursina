@@ -5,12 +5,16 @@ import math
 import random
 from collections import deque
 
-from src.core.config import (
+from src.core.config import MODELS_DIR
+
+from src.core.npc_config import (
     NPC_SPEED_WALK, NPC_SPEED_RUN_1, NPC_ATTACK_DISTANCE, NPC_IDLE_DISTANCE, NPC_ATTACK_TRIGGER_DISTANCE,
-    MODELS_DIR, COLLIDER_SHRINK_FACTOR, NPC_MIN_CHASE_DISTANCE, NPC_WALK_ANIM, NPC_RUN_ANIM_1, NPC_SKILL_ANIM,
+    NPC_MIN_CHASE_DISTANCE, NPC_WALK_ANIM, NPC_RUN_ANIM_1, NPC_SKILL_ANIM,
     NPC_IDLE_ANIM, NPC_ATTACK_ANIM_1, NPC_RUN_ANIM_2, NPC_SPEED_RUN_2, NPC_SKILL_SOUND, NPC_SKILL_SOUND_PITCH,
     NPC_WALK_SOUND, NPC_ATTACK_1_SOUND
 )
+
+from src.core.objects_config import COLLIDER_SHRINK_FACTOR
 from src.shaders.shader_loader import npc_shader_panda
 from src.utils.object_setup import setup_collidable_object
 
@@ -689,22 +693,6 @@ class AnimatedNPC:
             self.state = new_state
         else:
             print(f"⚠️ Неверное состояние: {new_state} | Invalid state: {new_state}")
-
-    def trigger_interaction(self):
-        """Вызывается при взаимодействии игрока с NPC. | Called when player interacts with NPC."""
-        if hasattr(self, 'talked') and self.talked:
-            return
-        self.talked = True
-        msg = Text(
-            text='Run!',
-            origin=(0, 0),
-            y=0.1,
-            scale=1.2,
-            color=color.red,
-            background=True
-        )
-        msg.animate('color', color.rgba(255, 0, 0, 0), duration=2.0, curve=curve.out_expo)
-        invoke(destroy, msg, delay=0.8)
 
     def reset_skill_flag(self):
         """

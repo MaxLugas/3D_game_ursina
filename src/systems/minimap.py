@@ -1,6 +1,5 @@
 from ursina import *
-from src.core.config import MAP_HALF_SIZE, MINIMAP_SIZE, MINIMAP_PLAYER_MARKER_SCALE, MINIMAP_NPC_MARKER_SCALE, \
-    MINIMAP_VISIBILITY, ICONS_DIR
+from src.core.config import MAP_HALF_SIZE, MINIMAP_SIZE, MINIMAP_PLAYER_MARKER_SCALE, MINIMAP_VISIBILITY, ICONS_DIR
 
 
 class Minimap:
@@ -38,8 +37,8 @@ class Minimap:
 
     def _world_to_minimap(self, world_pos):
         """Преобразует мировые координаты в позицию на мини-карте. | Convert world coordinates to minimap position."""
-        nx = world_pos[0] / self.map_half_size            # Нормализация по X | Normalize X
-        nz = world_pos[2] / self.map_half_size            # Нормализация по Z | Normalize Z
+        nx = world_pos[0] / self.map_half_size  # Нормализация по X | Normalize X
+        nz = world_pos[2] / self.map_half_size  # Нормализация по Z | Normalize Z
         offset = self.minimap_size / 2
         return Vec2(
             self.bg.position.x + nx * offset,

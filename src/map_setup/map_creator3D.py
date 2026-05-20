@@ -7,11 +7,13 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from ursina import *
 from ursina.prefabs.first_person_controller import FirstPersonController
 
-from src.core.config import (
-    GROUND_SCALE, MAP_HALF_SIZE, ASSETS_DIR, MODELS_DIR,
-    STONE_SCALE, TARGET_SCALE, STATUE_SCALE, FLASHLIGHT_SCALE,
-    COTTAGE_SCALE, TREE_SCALE, NPC_SCALE, PLAYER_SPAWN_SCALE
-)
+from src.core.config import GROUND_SCALE, MAP_HALF_SIZE, ASSETS_DIR, MODELS_DIR
+from src.core.npc_config import NPC_SCALE
+
+
+from src.core.objects_config import PLAYER_SPAWN_SCALE, STONE_SCALE, TARGET_SCALE, STATUE_SCALE, FLASHLIGHT_SCALE, \
+    COTTAGE_SCALE, TREE_SCALE
+
 from src.core.engine import init_engine
 from src.systems.map_loader import OBJECT_CONFIGS
 

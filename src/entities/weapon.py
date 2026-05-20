@@ -1,33 +1,25 @@
 from ursina import *
 from direct.actor.Actor import Actor
 from src.core.destructibles import DESTRUCTIBLE_OBJECTS
-from src.core.config import (
-    GLOCK_WEAPON_MODEL,
-    GLOCK_MAGAZINE_SIZE,
-    GLOCK_WEAPON_SCALE,
-    ANIM_FPS,
-    FIRE_ANIM_START_FRAME,
-    FIRE_ANIM_END_FRAME,
-    SOUND_GLOCK_FIRE,
-    SOUND_GLOCK_RELOAD,
-    RELOAD_PITCH, MODELS_DIR
-)
+from src.core.config import MODELS_DIR
+from src.core.weapon_config import GLOCK_WEAPON_MODEL, GLOCK_MAGAZINE_SIZE, GLOCK_WEAPON_SCALE, ANIM_FPS, \
+    FIRE_ANIM_START_FRAME, FIRE_ANIM_END_FRAME, SOUND_GLOCK_FIRE, SOUND_GLOCK_RELOAD, RELOAD_PITCH
 from src.shaders.shader_loader import weapon_shader_panda
 
+
 class FPSWeapon:
-    def __init__(self, model_path=MODELS_DIR/GLOCK_WEAPON_MODEL, scale=GLOCK_WEAPON_SCALE):
+    def __init__(self, model_path=MODELS_DIR / GLOCK_WEAPON_MODEL, scale=GLOCK_WEAPON_SCALE):
         # Создаём узел-держатель для оружия в камере | Create weapon holder node attached to camera
         self.holder = camera.attach_new_node("fps_weapon")
-        self.holder.set_pos(0.25, -1.36, 0.7)          # Позиция оружия в поле зрения | Weapon position in view
-        self.holder.set_hpr(190, 0, 0)                 # Углы поворота (HPR) | Rotation angles (HPR)
+        self.holder.set_pos(0.25, -1.36, 0.7)  # Позиция оружия в поле зрения | Weapon position in view
+        self.holder.set_hpr(190, 0, 0)  # Углы поворота (HPR) | Rotation angles (HPR)
 
         # Загружаем анимированную модель оружия | Load animated weapon model
         self.actor = Actor(model_path)
         self.actor.reparent_to(self.holder)
         self.actor.set_scale(scale)
         self.actor.set_light_off(True)
-        self.actor.set_shader(weapon_shader_panda)        # Применяем кастомный шейдер | Apply custom shader
-
+        self.actor.set_shader(weapon_shader_panda)  # Применяем кастомный шейдер | Apply custom shader
 
         # Сопоставление логических имён с реальными именами в модели | Map logical animation names to actual names
         self.anim_names = {
@@ -69,7 +61,6 @@ class FPSWeapon:
         # Звуковые эффекты | Sound effects
         self.fire_sound = Audio(SOUND_GLOCK_FIRE, autoplay=False)
         self.reload_sound = Audio(SOUND_GLOCK_RELOAD, autoplay=False, pitch=RELOAD_PITCH)
-
 
     def _get_ammo_text(self):
         remaining = self.magazine_size - self.shots_fired
