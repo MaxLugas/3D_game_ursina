@@ -6,8 +6,8 @@ from src.entities.npc import AnimatedNPC
 from src.core.config import ASSETS_DIR, GROUND_SCALE, MAP_FILENAME
 
 
-from src.core.npc_config import NPC_IDLE_ANIM, NPC_WALK_ANIM, NPC_RUN_ANIM_1, NPC_SKILL_ANIM, NPC_SCALE, NPC_SKILL_SOUND, NPC_WALK_SOUND, \
-    NPC_ATTACK_1_SOUND, NPC_SPEED_WALK, NPC_SPEED_RUN_1
+from src.core.npc_config import DROID_IDLE_ANIM, DROID_WALK_ANIM, DROID_RUN_ANIM_1, DROID_SKILL_ANIM, DROID_SCALE, DROID_SKILL_SOUND, DROID_WALK_SOUND, \
+    DROID_ATTACK_1_SOUND, DROID_SPEED_WALK, DROID_SPEED_RUN_1
 from src.core.objects_config import STONE_COLLIDER_SHRINK, TREE_COLLIDER_SHRINK, \
     COTTAGE_COLLIDER_SHRINK, STONE_SCALE, TARGET_SCALE, STATUE_SCALE, FLASHLIGHT_SCALE, COTTAGE_SCALE, TREE_SCALE, \
     FLASHLIGHT_COLLIDER_SHRINK, TARGET_COLLIDER_SHRINK
@@ -209,16 +209,16 @@ def load_map(filename=MAP_FILENAME, player=None, load_npcs=True, verbose=True):
                         start_pos=(x, y, z),
                         player=player,
                         model_path='droid.glb',
-                        idle_anim=NPC_IDLE_ANIM,
-                        walk_anim=NPC_WALK_ANIM,
-                        run_anim_1=NPC_RUN_ANIM_1,
-                        skill_anim=NPC_SKILL_ANIM,
-                        scale=npc_data.get("scale", NPC_SCALE),
-                        speed_walk=NPC_SPEED_WALK,
-                        speed_run_1=NPC_SPEED_RUN_1,
-                        skill_sound=NPC_SKILL_SOUND,
-                        walk_sound=NPC_WALK_SOUND,
-                        attack_sound_1=NPC_ATTACK_1_SOUND
+                        idle_anim=DROID_IDLE_ANIM,
+                        walk_anim=DROID_WALK_ANIM,
+                        run_anim_1=DROID_RUN_ANIM_1,
+                        skill_anim=DROID_SKILL_ANIM,
+                        scale=npc_data.get("scale", DROID_SCALE),
+                        speed_walk=DROID_SPEED_WALK,
+                        speed_run_1=DROID_SPEED_RUN_1,
+                        skill_sound=DROID_SKILL_SOUND,
+                        walk_sound=DROID_WALK_SOUND,
+                        attack_sound_1=DROID_ATTACK_1_SOUND
                     )
                     npcs.append(npc)
                     world_entities.append(npc)

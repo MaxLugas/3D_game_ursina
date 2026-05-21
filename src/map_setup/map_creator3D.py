@@ -8,7 +8,7 @@ from ursina import *
 from ursina.prefabs.first_person_controller import FirstPersonController
 
 from src.core.config import GROUND_SCALE, MAP_HALF_SIZE, ASSETS_DIR, MODELS_DIR
-from src.core.npc_config import NPC_SCALE
+from src.core.npc_config import DROID_SCALE
 
 
 from src.core.objects_config import PLAYER_SPAWN_SCALE, STONE_SCALE, TARGET_SCALE, STATUE_SCALE, FLASHLIGHT_SCALE, \
@@ -24,7 +24,7 @@ app = init_engine()
 SCALE_CONFIG = {
     'tree': TREE_SCALE, 'stone': STONE_SCALE, 'cottage': COTTAGE_SCALE,
     'flashlight': FLASHLIGHT_SCALE, 'statue': STATUE_SCALE, 'target': TARGET_SCALE,
-    'npc': NPC_SCALE, 'player_spawn': PLAYER_SPAWN_SCALE
+    'npc': DROID_SCALE, 'player_spawn': PLAYER_SPAWN_SCALE
 }
 MAP_FILE = ASSETS_DIR / 'map3D.json'
 GHOST_ROTATION_SPEED = 90

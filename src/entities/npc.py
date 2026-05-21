@@ -8,10 +8,10 @@ from collections import deque
 from src.core.config import MODELS_DIR
 
 from src.core.npc_config import (
-    NPC_SPEED_WALK, NPC_SPEED_RUN_1, NPC_ATTACK_DISTANCE, NPC_IDLE_DISTANCE, NPC_ATTACK_TRIGGER_DISTANCE,
-    NPC_MIN_CHASE_DISTANCE, NPC_WALK_ANIM, NPC_RUN_ANIM_1, NPC_SKILL_ANIM,
-    NPC_IDLE_ANIM, NPC_ATTACK_ANIM_1, NPC_RUN_ANIM_2, NPC_SPEED_RUN_2, NPC_SKILL_SOUND, NPC_SKILL_SOUND_PITCH,
-    NPC_WALK_SOUND, NPC_ATTACK_1_SOUND
+    DROID_SPEED_WALK, DROID_SPEED_RUN_1, DROID_ATTACK_DISTANCE, DROID_IDLE_DISTANCE, DROID_ATTACK_TRIGGER_DISTANCE,
+    DROID_MIN_CHASE_DISTANCE, DROID_WALK_ANIM, DROID_RUN_ANIM_1, DROID_SKILL_ANIM,
+    DROID_IDLE_ANIM, DROID_ATTACK_ANIM_1, DROID_RUN_ANIM_2, DROID_SPEED_RUN_2, DROID_SKILL_SOUND, DROID_SKILL_SOUND_PITCH,
+    DROID_WALK_SOUND, DROID_ATTACK_1_SOUND
 )
 
 from src.core.objects_config import COLLIDER_SHRINK_FACTOR
@@ -21,10 +21,10 @@ from src.utils.object_setup import setup_collidable_object
 
 class AnimatedNPC:
     def __init__(self, start_pos, player, model_path=f'{MODELS_DIR}/droid.glb',
-                 idle_anim=NPC_IDLE_ANIM, walk_anim=NPC_WALK_ANIM, run_anim_1=NPC_RUN_ANIM_1, run_anim_2=NPC_RUN_ANIM_2,
-                 skill_anim=NPC_SKILL_ANIM, attack_anim_1=NPC_ATTACK_ANIM_1, fix_orientation=True, scale=2.0,
-                 speed_walk=NPC_SPEED_WALK, speed_run_1=NPC_SPEED_RUN_1, speed_run_2=NPC_SPEED_RUN_2,
-                 shrink_factor=COLLIDER_SHRINK_FACTOR, skill_sound=NPC_SKILL_SOUND, walk_sound=NPC_WALK_SOUND, attack_sound_1=NPC_ATTACK_1_SOUND):
+                 idle_anim=DROID_IDLE_ANIM, walk_anim=DROID_WALK_ANIM, run_anim_1=DROID_RUN_ANIM_1, run_anim_2=DROID_RUN_ANIM_2,
+                 skill_anim=DROID_SKILL_ANIM, attack_anim_1=DROID_ATTACK_ANIM_1, fix_orientation=True, scale=2.0,
+                 speed_walk=DROID_SPEED_WALK, speed_run_1=DROID_SPEED_RUN_1, speed_run_2=DROID_SPEED_RUN_2,
+                 shrink_factor=COLLIDER_SHRINK_FACTOR, skill_sound=DROID_SKILL_SOUND, walk_sound=DROID_WALK_SOUND, attack_sound_1=DROID_ATTACK_1_SOUND):
 
         self.player = player
         self.speed_walk = speed_walk
@@ -334,7 +334,7 @@ class AnimatedNPC:
         current = self.npc_node.get_pos()
 
         distance_to_target = (target - current).length()
-        if distance_to_target <= NPC_MIN_CHASE_DISTANCE:
+        if distance_to_target <= DROID_MIN_CHASE_DISTANCE:
             return
 
         if self._is_stuck():
@@ -564,7 +564,7 @@ class AnimatedNPC:
         previous_state = self.state
 
         # Всегда поворачиваться к игроку, если он близко | Always face the player when close
-        if distance_to_player < NPC_IDLE_DISTANCE:
+        if distance_to_player < DROID_IDLE_DISTANCE:
             self._look_at_player(player_pos)
 
         RUN_TRIGGER_DISTANCE = 15
@@ -576,17 +576,17 @@ class AnimatedNPC:
 
         # Логика состояний | State machine
         if self.state == self.idle_anim:
-            if distance_to_player < NPC_IDLE_DISTANCE:
+            if distance_to_player < DROID_IDLE_DISTANCE:
                 self.state = self.walk_anim
                 if self.walk_anim in self.actor.get_anim_names():
                     self.actor.loop(self.walk_anim)
 
         elif self.state == self.walk_anim:
-            if distance_to_player < NPC_ATTACK_DISTANCE:
+            if distance_to_player < DROID_ATTACK_DISTANCE:
                 self.state = self.skill_anim
                 if self.skill_anim in self.actor.get_anim_names():
                     self.actor.play(self.skill_anim)
-            elif distance_to_player >= NPC_IDLE_DISTANCE:
+            elif distance_to_player >= DROID_IDLE_DISTANCE:
                 self.state = self.idle_anim
                 if self.idle_anim in self.actor.get_anim_names():
                     self.actor.loop(self.idle_anim)
@@ -597,7 +597,7 @@ class AnimatedNPC:
                 self._play_sound('walk_sound', 'walk', use_interval=True, interval=self.walk_sound_interval)
 
         elif self.state == self.skill_anim:
-            self._play_sound('skill_sound', 'skill', pitch=NPC_SKILL_SOUND_PITCH, played_flag='skill_sound_played')
+            self._play_sound('skill_sound', 'skill', pitch=DROID_SKILL_SOUND_PITCH, played_flag='skill_sound_played')
             if current_anim != self.skill_anim:
                 self.skill_used = True
                 self.state = self.run_anim_1
@@ -605,11 +605,11 @@ class AnimatedNPC:
                     self.actor.loop(self.run_anim_1)
 
         elif self.state == self.run_anim_1:
-            if distance_to_player < NPC_ATTACK_TRIGGER_DISTANCE:
+            if distance_to_player < DROID_ATTACK_TRIGGER_DISTANCE:
                 self.state = self.attack_anim_1
                 if self.attack_anim_1 in self.actor.get_anim_names():
                     self.actor.play(self.attack_anim_1)
-            elif distance_to_player >= NPC_IDLE_DISTANCE:
+            elif distance_to_player >= DROID_IDLE_DISTANCE:
                 self.state = self.idle_anim
                 if self.idle_anim in self.actor.get_anim_names():
                     self.actor.loop(self.idle_anim)
@@ -626,11 +626,11 @@ class AnimatedNPC:
 
         # === Вторая анимация бега с увеличенной скоростью | Second run animation ===
         elif self.state == self.run_anim_2:
-            if distance_to_player < NPC_ATTACK_TRIGGER_DISTANCE:
+            if distance_to_player < DROID_ATTACK_TRIGGER_DISTANCE:
                 self.state = self.attack_anim_1
                 if self.attack_anim_1 in self.actor.get_anim_names():
                     self.actor.play(self.attack_anim_1)
-            elif distance_to_player >= NPC_IDLE_DISTANCE:
+            elif distance_to_player >= DROID_IDLE_DISTANCE:
                 self.state = self.idle_anim
                 if self.idle_anim in self.actor.get_anim_names():
                     self.actor.loop(self.idle_anim)
@@ -654,7 +654,7 @@ class AnimatedNPC:
 
             if current_anim != self.attack_anim_1:
                 self.attack_sound_played = False
-                if distance_to_player < NPC_IDLE_DISTANCE:
+                if distance_to_player < DROID_IDLE_DISTANCE:
                     if self.skill_used:
                         self.state = self.run_anim_2
                         if self.run_anim_2 in self.actor.get_anim_names():
