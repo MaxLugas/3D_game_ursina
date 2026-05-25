@@ -41,5 +41,7 @@ player_start_rot = 0.0
 ghost_entity = None
 height_offset = 0.0
 
+occupied_cells: set[tuple[int, int]] = set()
+
 player = None
 ui_text = None

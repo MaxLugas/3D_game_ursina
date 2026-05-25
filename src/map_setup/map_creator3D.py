@@ -7,7 +7,7 @@ from ursina import *
 from ursina.prefabs.first_person_controller import FirstPersonController
 
 from src.core.engine import init_engine
-from src.core.config import GROUND_SCALE, MAP_HALF_SIZE, MODELS_DIR
+from src.core.config import MAP_HALF_SIZE
 from src.map_setup import map_editor_state as S
 from src.map_setup.map_editor_ui import update_ui_text
 from src.map_setup.map_editor_grid import create_grid_visual

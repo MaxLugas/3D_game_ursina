@@ -1,6 +1,6 @@
 from ursina import *
 from src.map_setup import map_editor_state as S
-from src.map_setup.map_editor_helpers import get_model, get_scale, get_display_y
+from src.map_setup.map_editor_helpers import get_model, get_scale, get_display_y, is_placement_blocked
 from src.core.config import GROUND_SCALE
 
 
@@ -49,5 +49,11 @@ def refresh_ghost_position():
 
         y = get_display_y(S.current_type[0]) + S.height_offset
         S.ghost_entity.position = Vec3(x, y, z)
+
+        scale = get_scale(S.current_type[0])
+        if is_placement_blocked(x, z, scale):
+            S.ghost_entity.color = color.red
+        else:
+            S.ghost_entity.color = color.yellow
     else:
         S.ghost_entity.enabled = False

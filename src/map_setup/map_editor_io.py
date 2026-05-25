@@ -1,17 +1,19 @@
 import json
 from ursina import *
 from src.map_setup import map_editor_state as S
-from src.map_setup.map_editor_helpers import get_model, get_scale, get_display_y, update_player_spawn
+from src.map_setup.map_editor_helpers import get_model, get_scale, get_display_y, update_player_spawn, \
+    get_footprint_cells
 from src.map_setup.map_editor_ui import update_ui_text
 
 
 def save_map():
-    clean_objects = [{k: v for k, v in obj.items() if k != 'entity_ref'} for obj in S.placed_objects]
-    clean_npcs = [{k: v for k, v in obj.items() if k != 'entity_ref'} for obj in S.placed_npcs]
+    _save_keys = ('type', 'x', 'y', 'z', 'y_offset', 'scale', 'rot')
+    clean_objects = [{k: v for k, v in obj.items() if k in _save_keys} for obj in S.placed_objects]
+    clean_npcs = [{k: v for k, v in obj.items() if k in _save_keys} for obj in S.placed_npcs]
 
     clean_spawn = None
     if S.player_spawn_data:
-        clean_spawn = {k: v for k, v in S.player_spawn_data.items() if k != 'entity_ref'}
+        clean_spawn = {k: v for k, v in S.player_spawn_data.items() if k in _save_keys}
 
     data = {
         "metadata": {
@@ -106,6 +108,21 @@ def load_map():
         S.player_spawn_data = spawn_data
 
     update_player_spawn()
+
+    S.occupied_cells.clear()
+    for obj_data in S.placed_objects + S.placed_npcs:
+        cells = get_footprint_cells(obj_data['x'], obj_data['z'], obj_data.get('scale', get_scale(obj_data['type'])))
+        obj_data['footprint_cells'] = cells
+        for cell in cells:
+            S.occupied_cells.add(cell)
+    if S.player_spawn_data:
+        cells = get_footprint_cells(
+            S.player_spawn_data['x'], S.player_spawn_data['z'],
+            S.player_spawn_data.get('scale', get_scale('player_spawn'))
+        )
+        S.player_spawn_data['footprint_cells'] = cells
+        for cell in cells:
+            S.occupied_cells.add(cell)
 
     spawn_status = "with spawn" if S.player_spawn_data else "without spawn"
     print(f"Map Loaded: {len(S.placed_objects)} objects, {len(S.placed_npcs)} NPCs, {spawn_status}")
