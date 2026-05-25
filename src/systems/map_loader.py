@@ -16,7 +16,13 @@ def _clamp_coords(x, z, half_size, offset=2.0):
     return clamp(x, -half_size + offset, half_size - offset), clamp(z, -half_size + offset, half_size - offset)
 
 
-def create_world_object(obj_type, x, y, z, rot, verbose=True):
+def _setup_with_offset(entity, shrink_factor, y_offset):
+    setup_collidable_object(entity, shrink_factor=shrink_factor)
+    if y_offset:
+        entity.y += y_offset
+
+
+def create_world_object(obj_type, x, y, z, rot, y_offset=0, verbose=True):
     """
     Создание объекта мира по типу
     Create world object by type
@@ -41,9 +47,11 @@ def create_world_object(obj_type, x, y, z, rot, verbose=True):
     )
 
     if config.get("shrink_factor") is not None:
-        invoke(setup_collidable_object, entity, shrink_factor=config["shrink_factor"], delay=0)
+        invoke(_setup_with_offset, entity, config["shrink_factor"], y_offset, delay=0)
     elif config.get("collider"):
         entity.collider = config["collider"]
+        if y_offset:
+            entity.y += y_offset
 
     if config.get("is_statue"):
         entity.is_statue = True
@@ -122,6 +130,7 @@ def load_map(filename=MAP_FILENAME, player=None, load_npcs=True, verbose=True):
         x = float(obj.get("x", 0)) * scale_factor
         z = float(obj.get("z", 0)) * scale_factor
         y = float(obj.get("y", 3.0))
+        y_offset = float(obj.get("y_offset", 0))
 
         # === Загрузка поворота | Load rotation ===
         rot = float(obj.get("rot", 0))
@@ -130,7 +139,7 @@ def load_map(filename=MAP_FILENAME, player=None, load_npcs=True, verbose=True):
         x, z = _clamp_coords(x, z, map_half)
 
         # Создание объекта через фабрику | Create object via factory
-        entity = create_world_object(obj_type, x, y, z, rot, verbose)
+        entity = create_world_object(obj_type, x, y, z, rot, y_offset, verbose)
         if entity:
             world_entities.append(entity)
 
@@ -148,7 +157,7 @@ def load_map(filename=MAP_FILENAME, player=None, load_npcs=True, verbose=True):
                 # Получаем позицию из JSON | Get position from JSON
                 x = float(npc_data.get("x", 0)) * scale_factor
                 z = float(npc_data.get("z", 0)) * scale_factor
-                y = float(npc_data.get("y", 0.0))
+                y = float(npc_data.get("y", 0.0)) + float(npc_data.get("y_offset", 0))
 
                 # Прижатие к границам | Clamp to boundaries
                 x, z = _clamp_coords(x, z, map_half)

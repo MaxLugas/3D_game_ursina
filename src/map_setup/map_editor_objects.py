@@ -23,9 +23,10 @@ def place_object():
         color=color.white
     )
 
-    y_offset = round(pos.y - get_display_y(obj_type), 1)
+    base_y = get_display_y(obj_type)
+    y_offset = round(pos.y - base_y, 1)
     data = {
-        'type': obj_type, 'x': pos.x, 'y': pos.y, 'z': pos.z,
+        'type': obj_type, 'x': pos.x, 'y': base_y, 'z': pos.z,
         'y_offset': y_offset,
         'scale': get_scale(obj_type), 'rot': S.ghost_entity.rotation_y,
         'entity_ref': obj
