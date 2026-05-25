@@ -8,58 +8,7 @@ from src.core.config import ASSETS_DIR, GROUND_SCALE, MAP_FILENAME
 
 from src.core.npc_config import DROID_IDLE_ANIM, DROID_WALK_ANIM, DROID_RUN_ANIM_1, DROID_SKILL_ANIM, DROID_SCALE, DROID_SKILL_SOUND, DROID_WALK_SOUND, \
     DROID_ATTACK_1_SOUND, DROID_SPEED_WALK, DROID_SPEED_RUN_1
-from src.core.objects_config import STONE_COLLIDER_SHRINK, TREE_COLLIDER_SHRINK, \
-    COTTAGE_COLLIDER_SHRINK, STONE_SCALE, TARGET_SCALE, STATUE_SCALE, FLASHLIGHT_SCALE, COTTAGE_SCALE, TREE_SCALE, \
-    FLASHLIGHT_COLLIDER_SHRINK, TARGET_COLLIDER_SHRINK
-
-# === Конфигурация объектов мира | World objects configuration ===
-OBJECT_CONFIGS = {
-    "stone": {
-        "model": "stone",
-        "scale": STONE_SCALE,
-        "shrink_factor": STONE_COLLIDER_SHRINK,
-        "y_offset": 0,
-        "enabled": False
-    },
-    "target": {
-        "model": "target",
-        "scale": TARGET_SCALE,
-        "shrink_factor": TARGET_COLLIDER_SHRINK,
-        "y_offset": 0,
-        "enabled": False
-    },
-    "tree": {
-        "model": "tree",
-        "scale": TREE_SCALE,
-        "shrink_factor": TREE_COLLIDER_SHRINK,
-        "y_offset": 0,
-        "has_specular": True,
-        "enabled": False
-    },
-    "cottage": {
-        "model": "cottage",
-        "scale": COTTAGE_SCALE,
-        "shrink_factor": COTTAGE_COLLIDER_SHRINK,
-        "y_offset": 0,
-        "enabled": False
-    },
-    "flashlight": {
-        "model": "flashlight",
-        "scale": FLASHLIGHT_SCALE,
-        "shrink_factor": FLASHLIGHT_COLLIDER_SHRINK,
-        "y_offset": 0,
-        "enabled": False
-    },
-    "statue": {
-        "model": "statue",
-        "scale": STATUE_SCALE,
-        "shrink_factor": None,
-        "collider": "box",
-        "y_offset": 0,
-        "is_statue": True,
-        "enabled": True
-    }
-}
+from src.core.objects_config import OBJECT_CONFIGS
 
 
 def _clamp_coords(x, z, half_size, offset=2.0):

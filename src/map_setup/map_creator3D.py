@@ -12,10 +12,9 @@ from src.core.npc_config import DROID_SCALE
 
 
 from src.core.objects_config import PLAYER_SPAWN_SCALE, STONE_SCALE, TARGET_SCALE, STATUE_SCALE, FLASHLIGHT_SCALE, \
-    COTTAGE_SCALE, TREE_SCALE
+    COTTAGE_SCALE, TREE_SCALE, OBJECT_CONFIGS
 
 from src.core.engine import init_engine
-from src.systems.map_loader import OBJECT_CONFIGS
 
 application.asset_folder = MODELS_DIR
 
@@ -61,8 +60,8 @@ info_panel = """
 === MAP EDITOR ===
 
 [OBJECTS]                           [CONTROLS]
-1: Stone    2: Tree    3: Cottage   LMB: Place    RMB: Delete
-4: Lamp     5: Statue  6: Target    R: Rotate     G: Ghost mode
+1: Stone    2: Target    3: Tree    LMB: Place    RMB: Delete
+4: Cottage  5: Lamp      6: Statue  R: Rotate     G: Ghost mode
 N: NPC      P: Spawn                X: Snap       H: Grid
                                     Ctrl+S: Save  Ctrl+L: Load
                                     ESC: Exit

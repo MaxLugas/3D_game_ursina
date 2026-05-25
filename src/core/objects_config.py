@@ -16,3 +16,52 @@ COTTAGE_SCALE=5
 FLASHLIGHT_SCALE=3
 STATUE_SCALE=0.5
 PLAYER_SPAWN_SCALE=2
+
+# ================ Конфигурация объектов мира | World objects configuration ================
+OBJECT_CONFIGS = {
+    "stone": {
+        "model": "stone",
+        "scale": STONE_SCALE,
+        "shrink_factor": STONE_COLLIDER_SHRINK,
+        "y_offset": 0,
+        "enabled": False
+    },
+    "target": {
+        "model": "target",
+        "scale": TARGET_SCALE,
+        "shrink_factor": TARGET_COLLIDER_SHRINK,
+        "y_offset": 0,
+        "enabled": False
+    },
+    "tree": {
+        "model": "tree",
+        "scale": TREE_SCALE,
+        "shrink_factor": TREE_COLLIDER_SHRINK,
+        "y_offset": 0,
+        "has_specular": True,
+        "enabled": False
+    },
+    "cottage": {
+        "model": "cottage",
+        "scale": COTTAGE_SCALE,
+        "shrink_factor": COTTAGE_COLLIDER_SHRINK,
+        "y_offset": 0,
+        "enabled": False
+    },
+    "flashlight": {
+        "model": "flashlight",
+        "scale": FLASHLIGHT_SCALE,
+        "shrink_factor": FLASHLIGHT_COLLIDER_SHRINK,
+        "y_offset": 0,
+        "enabled": False
+    },
+    "statue": {
+        "model": "statue",
+        "scale": STATUE_SCALE,
+        "shrink_factor": None,
+        "collider": "box",
+        "y_offset": 0,
+        "is_statue": True,
+        "enabled": True
+    }
+}
