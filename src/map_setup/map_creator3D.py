@@ -15,10 +15,12 @@ from src.map_setup.map_editor_ghost import create_ghost, refresh_ghost_position
 from src.map_setup.map_editor_objects import place_object, delete_object
 from src.map_setup.map_editor_io import save_map, load_map
 
+ALL_TYPES = list(S.OBJECT_CONFIGS.keys()) + ['npc', 'player_spawn']
+
 app = init_engine()
 
 window.cursor_visible = True
-print(f"Loaded object types: {list(S.OBJECT_CONFIGS.keys())}")
+print(f"Loaded object types: {ALL_TYPES}")
 
 S.player = FirstPersonController(
     speed=8, jump_height=3, gravity=1,
@@ -43,16 +45,6 @@ create_ghost()
 
 
 def input(key):
-    if key in '123456':
-        idx = int(key) - 1
-        types = list(S.OBJECT_CONFIGS.keys())
-        if idx < len(types):
-            S.current_type[0] = types[idx]
-            print(f"Selected: {S.current_type[0]}")
-            create_ghost()
-            update_ui_text()
-            return
-
     if key == 'n':
         S.current_type[0] = 'npc'
         create_ghost()
@@ -80,15 +72,29 @@ def input(key):
         return
 
     if key == 'scroll up':
-        S.height_offset = min(S.height_offset + 0.1, 10.0)
-        refresh_ghost_position()
-        update_ui_text()
+        if held_keys['shift']:
+            idx = (ALL_TYPES.index(S.current_type[0]) + 1) % len(ALL_TYPES)
+            S.current_type[0] = ALL_TYPES[idx]
+            print(f"Selected: {S.current_type[0]}")
+            create_ghost()
+            update_ui_text()
+        else:
+            S.height_offset = min(S.height_offset + 0.1, 10.0)
+            refresh_ghost_position()
+            update_ui_text()
         return
 
     if key == 'scroll down':
-        S.height_offset = max(S.height_offset - 0.1, -10.0)
-        refresh_ghost_position()
-        update_ui_text()
+        if held_keys['shift']:
+            idx = (ALL_TYPES.index(S.current_type[0]) - 1) % len(ALL_TYPES)
+            S.current_type[0] = ALL_TYPES[idx]
+            print(f"Selected: {S.current_type[0]}")
+            create_ghost()
+            update_ui_text()
+        else:
+            S.height_offset = max(S.height_offset - 0.1, -10.0)
+            refresh_ghost_position()
+            update_ui_text()
         return
 
     if key == 'escape':

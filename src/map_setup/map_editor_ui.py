@@ -5,9 +5,10 @@ info_panel = """
 === MAP EDITOR ===
 
 [OBJECTS]                           [CONTROLS]
-1: Stone    2: Target    3: Tree    LMB: Place    RMB: Delete
-4: Cottage  5: Lamp      6: Statue  R: Rotate     G: Ghost mode
-N: NPC      P: Spawn                X: Snap       H: Grid
+P: Spawn                            LMB: Place    RMB: Delete
+N: NPC                              R: Rotate     G: Ghost mode
+                                    X: Snap       H: Grid
+                                    Shift+Scroll: select object
                                     Ctrl+S: Save  Ctrl+L: Load
                                     ESC: Exit
 

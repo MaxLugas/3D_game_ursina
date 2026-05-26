@@ -1,4 +1,3 @@
-import math
 from ursina import *
 from src.map_setup import map_editor_state as S
 from src.core.objects_config import OBJECT_CONFIGS
@@ -50,14 +49,20 @@ def update_player_spawn():
         print("No spawn point, using default position (0, 1, 0)")
 
 
-def get_footprint_cells(x: float, z: float, scale: float) -> list[tuple[int, int]]:
-    """Returns grid cell coordinates occupied by an object centered at (x, z) with given scale."""
-    radius = max(1, math.ceil(scale / 2))
-    cx, cz = round(x), round(z)
-    return [(cx + dx, cz + dz) for dx in range(-radius, radius + 1) for dz in range(-radius, radius + 1)]
-
-
 def is_placement_blocked(x: float, z: float, scale: float) -> bool:
-    """Returns True if the area for an object is already occupied."""
-    cells = get_footprint_cells(x, z, scale)
-    return any(cell in S.occupied_cells for cell in cells)
+    half = scale / 2
+    new_l, new_r = x - half, x + half
+    new_b, new_t = z - half, z + half
+
+    all_objs = list(S.placed_objects) + list(S.placed_npcs)
+    if S.player_spawn_data:
+        all_objs.append(S.player_spawn_data)
+
+    for obj_data in all_objs:
+        s = obj_data.get('scale', 1.0)
+        ox, oz = obj_data['x'], obj_data['z']
+        oh = s / 2
+        if (new_l < ox + oh and new_r > ox - oh and
+            new_b < oz + oh and new_t > oz - oh):
+            return True
+    return False

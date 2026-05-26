@@ -6,6 +6,7 @@ COTTAGE_COLLIDER_SHRINK = 0.2                           # Уменьшение �
 FLASHLIGHT_COLLIDER_SHRINK = 0.2                        # Уменьшение коллайдера для фонариков | Collider shrink for flashlights
 TARGET_COLLIDER_SHRINK = 1                              # Уменьшение коллайдера для мишеней | Collider shrink for targets
 STATUE_COLLIDER_SHRINK = 1                              # Коллайдер статуи = размер модели | Statue collider matches model size
+FENCE_COLLIDER_SHRINK=1
 
 
 # ================ Размер | Scale ================
@@ -15,6 +16,7 @@ TREE_SCALE=2
 COTTAGE_SCALE=5
 FLASHLIGHT_SCALE=3
 STATUE_SCALE=0.5
+FENCE_SCALE=1
 PLAYER_SPAWN_SCALE=2
 
 # ================ Конфигурация объектов мира | World objects configuration ================
@@ -52,6 +54,7 @@ OBJECT_CONFIGS = {
         "model": "flashlight",
         "scale": FLASHLIGHT_SCALE,
         "shrink_factor": FLASHLIGHT_COLLIDER_SHRINK,
+        "collider": "box",
         "y_offset": 0,
         "enabled": False
     },
@@ -59,6 +62,15 @@ OBJECT_CONFIGS = {
         "model": "statue",
         "scale": STATUE_SCALE,
         "shrink_factor": None,
+        "collider": "box",
+        "y_offset": 0,
+        "is_statue": True,
+        "enabled": True
+    },
+    "fence": {
+        "model": "fence",
+        "scale": FENCE_SCALE,
+        "shrink_factor": FENCE_COLLIDER_SHRINK,
         "collider": "box",
         "y_offset": 0,
         "is_statue": True,
