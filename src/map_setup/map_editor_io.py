@@ -1,5 +1,6 @@
 import json
 from ursina import *
+from src.core.config import GROUND_SCALE
 from src.map_setup import map_editor_state as S
 from src.map_setup.map_editor_helpers import get_model, get_scale, get_display_y, update_player_spawn
 from src.map_setup.map_editor_ui import update_ui_text
@@ -16,7 +17,7 @@ def save_map():
 
     data = {
         "metadata": {
-            "size": S.grid_size, "grid_size": S.grid_size,
+            "size": GROUND_SCALE, "grid_size": S.grid_size,
             "objects_count": len(clean_objects),
             "npcs_count": len(clean_npcs),
             "has_spawn": clean_spawn is not None
