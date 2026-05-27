@@ -12,10 +12,9 @@ def place_object():
 
     obj_type = S.current_type[0]
     scale = get_scale(obj_type)
-
     pos = Vec3(S.ghost_entity.position.x, S.ghost_entity.position.y, S.ghost_entity.position.z)
 
-    if is_placement_blocked(pos.x, pos.z, scale):
+    if is_placement_blocked(pos.x, pos.z, obj_type):
         print(f"Cannot place {obj_type}: area already occupied!")
         return
 

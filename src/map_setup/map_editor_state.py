@@ -29,8 +29,8 @@ mouse_left_pressed = False
 mouse_right_pressed = False
 snap_to_grid = False
 show_grid = True
-grid_size = GROUND_SCALE
-cell_size = GROUND_SCALE / grid_size
+cell_size = 0.1
+grid_size = int(GROUND_SCALE / cell_size)
 grid_entities = []
 
 placed_objects = []

@@ -9,10 +9,12 @@ def create_grid_visual():
     S.grid_entities.clear()
 
     half = GROUND_SCALE // 2
-    step = 1
+    step = S.cell_size
     grid_color = color.rgba(100, 100, 100, 60)
+    num_lines = int(GROUND_SCALE // 2 / step)
 
-    for i in range(-half, half + 1, step):
+    for idx in range(-num_lines, num_lines + 1):
+        i = idx * step
         line_x = Entity(
             model='cube',
             scale=(GROUND_SCALE, 0.002, 0.002),

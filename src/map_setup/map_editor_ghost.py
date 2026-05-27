@@ -50,8 +50,7 @@ def refresh_ghost_position():
         y = get_display_y(S.current_type[0]) + S.height_offset
         S.ghost_entity.position = Vec3(x, y, z)
 
-        scale = get_scale(S.current_type[0])
-        if is_placement_blocked(x, z, scale):
+        if is_placement_blocked(x, z, S.current_type[0]):
             S.ghost_entity.color = color.red
         else:
             S.ghost_entity.color = color.yellow
