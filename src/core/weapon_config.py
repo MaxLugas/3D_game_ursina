@@ -10,3 +10,6 @@ RELOAD_ANIM_END_FRAME = 150                             # Конечный ка�
 SOUND_GLOCK_FIRE = 'Glock_fire'                         # Имя звукового файла выстрела | Fire sound filename
 SOUND_GLOCK_RELOAD = 'Glock_reload'                     # Имя звукового файла перезарядки | Reload sound filename
 RELOAD_PITCH = 0.62                                     # Замедление звука перезарядки | Reload sound pitch slowdown factor
+
+WEAPON_MODEL = 'UAL1_Standard.glb'
+WEAPON_SCALE = 0.8

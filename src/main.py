@@ -14,7 +14,7 @@ from src.systems.minimap import Minimap
 from src.entities.weapon import FPSWeapon
 from src.core.config import PLAYER_SPEED, PLAYER_SECOND_JUMP_HEIGHT, MAP_HALF_SIZE, PLAYER_GRAVITY, \
     PLAYER_MOUSE_SENSITIVITY, MAP_FILENAME
-from src.core.weapon_config import GLOCK_WEAPON_MODEL, GLOCK_WEAPON_SCALE
+from src.core.weapon_config import WEAPON_MODEL, WEAPON_SCALE
 
 game_logic = None
 player = None
@@ -39,7 +39,7 @@ def main():
     )
 
     # Инициализация оружия от первого лица | Initialize first-person weapon
-    weapon = FPSWeapon(model_path=GLOCK_WEAPON_MODEL, scale=GLOCK_WEAPON_SCALE)
+    weapon = FPSWeapon(model_path=WEAPON_MODEL, scale=WEAPON_SCALE)
 
     # Загружаем карту один раз с созданным игроком | Load map once with created player
     world_entities, npcs_from_map, _ = load_map(MAP_FILENAME, player=player, load_npcs=True)
