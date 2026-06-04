@@ -28,7 +28,7 @@ MINIMAP_VISIBILITY = 0.85                               # Прозрачност
 WINDOW_TITLE = "Game"                                   # Заголовок игрового окна | Game window title
 WINDOW_BORDERLESS = False                               # Безрамочное окно (False = обычное окно) | Borderless window (False = standard window)
 WINDOW_VSYNC = False                                    # Вертикальная синхронизация (отключена для производительности) | Vertical sync (disabled for performance)
-SHOW_COLLIDERS = True                                   # Отображение отладочных коллайдеров | Show debug colliders
+SHOW_COLLIDERS = False                                   # Отображение отладочных коллайдеров | Show debug colliders
 
 # ================ Освещение и окружение | Lighting and Environment ================
 SKY_TEXTURE = 'sky_sunset'                              # Имя текстуры неба | Sky texture name

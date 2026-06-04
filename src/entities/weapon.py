@@ -2,8 +2,6 @@ from ursina import *
 from direct.actor.Actor import Actor
 from src.core.destructibles import DESTRUCTIBLE_OBJECTS
 from src.core.weapon_config import WEAPON_MODEL, WEAPON_SCALE
-from src.shaders.shader_loader import weapon_shader_panda
-
 
 class FPSWeapon:
     def __init__(self, model_path=WEAPON_MODEL, scale=WEAPON_SCALE):
@@ -18,8 +16,30 @@ class FPSWeapon:
         print("materials:", list(self.actor.findAllMaterials()))
         self.actor.reparent_to(self.holder)
         self.actor.set_scale(scale)
-        self.actor.set_light_off(True)
-        self.actor.set_shader(weapon_shader_panda)
+
+        self.holder.set_light_off(True)
+        from panda3d.core import MaterialAttrib, ColorScaleAttrib
+        def _set_geom_colors(node):
+            if node.node().is_geom_node():
+                gn = node.node()
+                for i in range(gn.get_num_geoms()):
+                    state = gn.get_geom_state(i)
+                    attrib = state.get_attrib(MaterialAttrib.get_class_type())
+                    if attrib:
+                        mat = attrib.get_material()
+                        if mat:
+                            c = mat.get_diffuse()
+                            brightness = 2.0
+                            max_val = max(c.x, c.y, c.z)
+                            scale = min(brightness, 1.0 / max_val) if max_val > 0 else 1.0
+                            r = c.x * scale
+                            g = c.y * scale
+                            b = c.z * scale
+                            scale = ColorScaleAttrib.make(Vec4(r, g, b, c.w))
+                            gn.set_geom_state(i, state.add_attrib(scale))
+            for child in node.get_children():
+                _set_geom_colors(child)
+        _set_geom_colors(self.actor)
 
         available = set(self.actor.get_anim_names())
         self.available = available
@@ -107,7 +127,7 @@ class FPSWeapon:
                     self.current_anim = None
 
                     if finished_action == 'fire' and 'Spell_Simple_Idle_Loop' in self.available:
-                        self.actor.play('Spell_Simple_Idle_Loop')
+                        self.actor.loop('Spell_Simple_Idle_Loop')
 
         if not self.is_animating:
             if mouse.left:
