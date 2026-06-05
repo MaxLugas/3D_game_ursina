@@ -73,7 +73,6 @@ OBJECT_CONFIGS = {
         "shrink_factor": FENCE_COLLIDER_SHRINK,
         "collider": "box",
         "y_offset": 0,
-        "is_statue": True,
         "enabled": True
     }
 }

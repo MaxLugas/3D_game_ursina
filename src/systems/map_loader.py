@@ -157,7 +157,7 @@ def load_map(filename=MAP_FILENAME, player=None, load_npcs=True, verbose=True):
                 # Получаем позицию из JSON | Get position from JSON
                 x = float(npc_data.get("x", 0)) * scale_factor
                 z = float(npc_data.get("z", 0)) * scale_factor
-                y = float(npc_data.get("y", 0.0)) + float(npc_data.get("y_offset", 0))
+                y = float(npc_data.get("y", 0.0)) + float(npc_data.get("y_offset", 0)) - DROID_SCALE
 
                 # Прижатие к границам | Clamp to boundaries
                 x, z = _clamp_coords(x, z, map_half)

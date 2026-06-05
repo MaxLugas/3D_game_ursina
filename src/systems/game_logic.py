@@ -36,7 +36,7 @@ class GameLogic:
         for npc in self.npcs:
             npc.update()
 
-        # Взаимодействие с NPC | NPC interaction
-        for npc in self.npcs:
-            if distance(self.player.position, npc.get_position()) < 1.5:
-                npc.trigger_interaction()
+        # # Взаимодействие с NPC | NPC interaction
+        # for npc in self.npcs:
+        #     if distance(self.player.position, npc.get_position()) < 1.5:
+        #         npc.trigger_interaction()
