@@ -43,7 +43,6 @@ update_ui_text()
 create_grid_visual()
 create_ghost()
 
-# --- Collider debug ---
 show_colliders = False
 _collider_debug_entities = []
 

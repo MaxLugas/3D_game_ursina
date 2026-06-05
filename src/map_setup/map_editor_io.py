@@ -11,30 +11,25 @@ def save_map():
     clean_objects = [{k: v for k, v in obj.items() if k in _save_keys} for obj in S.placed_objects]
     clean_npcs = [{k: v for k, v in obj.items() if k in _save_keys} for obj in S.placed_npcs]
 
-    clean_spawn = None
-    if S.player_spawn_data:
-        clean_spawn = {k: v for k, v in S.player_spawn_data.items() if k in _save_keys}
-
     data = {
         "metadata": {
             "size": GROUND_SCALE, "grid_size": S.grid_size,
             "objects_count": len(clean_objects),
             "npcs_count": len(clean_npcs),
-            "has_spawn": clean_spawn is not None
+            "has_spawn": S.player_spawn_data is not None
         },
         "player_start": {
             "x": S.player_start_pos.x, "y": S.player_start_pos.y,
             "z": S.player_start_pos.z, "rot": S.player_start_rot
         },
         "objects": clean_objects,
-        "npcs": clean_npcs,
-        "spawn": clean_spawn
+        "npcs": clean_npcs
     }
 
     with open(S.MAP_FILE, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
-    spawn_status = "with spawn" if clean_spawn else "without spawn"
+    spawn_status = "with spawn" if S.player_spawn_data else "without spawn"
     print(f"Map Saved! {len(clean_objects)} objects, {len(clean_npcs)} NPCs, {spawn_status}")
 
 
@@ -91,23 +86,27 @@ def load_map():
         npc_data['entity_ref'] = npc
         S.placed_npcs.append(npc_data)
 
-    spawn_data = data.get("spawn")
-    if spawn_data:
-        y_offset = spawn_data.get('y_offset', 0)
-        y = get_display_y('player_spawn') + y_offset
+    ps = data.get("player_start")
+    if ps:
+        x = float(ps.get('x', 0))
+        z = float(ps.get('z', 0))
+        rot = float(ps.get('rot', 0))
+        y = get_display_y('player_spawn')
         spawn = Entity(
             model='player_spawn.bam',
             scale=get_scale('player_spawn'),
-            position=(spawn_data['x'], y, spawn_data['z']),
-            rotation_y=spawn_data.get('rot', 0),
+            position=(x, y, z),
+            rotation_y=rot,
             collider=None,
             unlit=True,
             color=color.yellow
         )
-        spawn_data['entity_ref'] = spawn
-        S.player_spawn_data = spawn_data
-
-    update_player_spawn()
+        S.player_spawn_data = {
+            'type': 'player_spawn', 'x': x, 'y': y, 'z': z,
+            'y_offset': 0, 'scale': get_scale('player_spawn'),
+            'rot': rot, 'entity_ref': spawn
+        }
+        update_player_spawn()
 
     spawn_status = "with spawn" if S.player_spawn_data else "without spawn"
     print(f"Map Loaded: {len(S.placed_objects)} objects, {len(S.placed_npcs)} NPCs, {spawn_status}")
