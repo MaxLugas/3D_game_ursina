@@ -24,7 +24,7 @@ class GameLogic:
 
         # Ускорение при зажатом Shift (бег) | Sprint when Shift is held
         if held_keys['shift']:
-            self.player.speed = self.base_speed * 1.75
+            self.player.speed = self.base_speed * 2
         else:
             self.player.speed = self.base_speed
 

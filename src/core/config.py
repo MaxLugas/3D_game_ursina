@@ -10,7 +10,7 @@ ICONS_DIR = ASSETS_DIR / 'icons'                        # Директория �
 MAP_FILENAME = ASSETS_DIR/ 'map3D.json'
 
 # ================ Игровые параметры | Game Parameters ================
-GROUND_SCALE = 100                                      # Размер игрового поля | Game field size
+GROUND_SCALE = 75                                      # Размер игрового поля | Game field size
 MAP_HALF_SIZE = int(GROUND_SCALE // 2)
 PLAYER_SPEED = 10                                        # Базовая скорость игрока | Player base speed
 PLAYER_JUMP_HEIGHT = 2.0                                # Высота прыжка | Height of the jump

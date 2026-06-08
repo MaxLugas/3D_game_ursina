@@ -29,7 +29,7 @@ class Minimap:
 
     def _load_icons(self):
         icon_types = ['tree', 'stone', 'cottage', 'statue', 'flashlight',
-                      'target', 'npc', 'player_start']
+                      'target', 'fence', 'npc', 'player_start']
         for name in icon_types:
             path = ICONS_DIR / f'{name}.png'
             if path.exists():
@@ -54,7 +54,7 @@ class Minimap:
 
     def _get_object_type(self, ent):
         model_str = str(ent.model).lower()
-        for obj_type in ('tree', 'stone', 'cottage', 'statue', 'flashlight', 'target'):
+        for obj_type in ('tree', 'stone', 'cottage', 'statue', 'flashlight', 'target', 'fence'):
             if obj_type in model_str:
                 return obj_type
         return None

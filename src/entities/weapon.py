@@ -13,8 +13,8 @@ class FPSWeapon:
 
         # Загружаем анимированную модель оружия | Load animated weapon model
         self.actor = Actor(model_path)
-        print("textures:", list(self.actor.findAllTextures()))
-        print("materials:", list(self.actor.findAllMaterials()))
+        # print("textures:", list(self.actor.findAllTextures()))
+        # print("materials:", list(self.actor.findAllMaterials()))
         self.actor.reparent_to(self.holder)
         self.actor.set_scale(scale)
 
