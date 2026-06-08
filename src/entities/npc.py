@@ -127,6 +127,8 @@ class AnimatedNPC:
         # === СОЗДАНИЕ КОЛЛАЙДЕРА | CREATE COLLIDER ===
         self._create_collider()
 
+        self._destroyed = False
+
         print(f"✅ NPC создан в позиции {start_pos[0]:.2f} | NPC created at position {start_pos[0]:.2f}")
 
     def _load_sound(self, sound_path, sound_attr, sound_type="sound", volume=0.5):
@@ -185,20 +187,26 @@ class AnimatedNPC:
 
     def _create_collider(self):
         """Создание коллайдера для NPC | Create collider for NPC"""
-        temp_ent = Entity(
-            model=self.model_path,
-            scale=self._scale,
-            position=self.npc_node.get_pos(),
-            enabled=False,
-            visible=False
+        # Сначала получаем размеры модели | First get model bounds
+        temp = Entity(model=self.model_path, scale=self._scale, visible=False)
+        size = Vec3(temp.bounds.size)
+        center = Vec3(temp.bounds.center)
+        destroy(temp)
+
+        # Создаём коллайдер без модели (чистый BoxCollider) | Collider without model (pure BoxCollider)
+        collider_size = Vec3(
+            size.x * self._shrink_factor,
+            size.y,
+            size.z * self._shrink_factor
         )
 
-        setup_collidable_object(temp_ent, shrink_factor=self._shrink_factor)
-
-        self.collider_entity = temp_ent
-        self.collider_entity.reparent_to(self.npc_node)
-        self.collider_entity.visible = False
-        self.collider_entity.texture = None
+        self.collider_entity = Entity(
+            position=self.npc_node.get_pos(),
+            visible=False,
+            enabled=True
+        )
+        self.collider_entity.collider = BoxCollider(self.collider_entity, center=center, size=collider_size)
+        self.collider_entity.npc_ref = self
 
     def _look_at_player(self, player_pos):
         """
@@ -667,6 +675,16 @@ class AnimatedNPC:
                     self.state = self.idle_anim
                     if self.idle_anim in self.actor.get_anim_names():
                         self.actor.loop(self.idle_anim)
+
+        # Синхронизация коллайдера с позицией NPC | Sync collider with NPC position
+        if hasattr(self, 'collider_entity') and self.collider_entity:
+            self.collider_entity.position = self.npc_node.get_pos()
+
+    def die(self):
+        self._destroyed = True
+        destroy(self.collider_entity)
+        self.actor.cleanup()
+        self.npc_node.detach_node()
 
     def get_position(self):
         """

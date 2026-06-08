@@ -113,6 +113,10 @@ class Minimap:
             if isinstance(source, Entity) and source.is_empty():
                 destroy(marker)
                 continue
+            # Пропуск уничтоженных NPC | Skip destroyed NPCs
+            if hasattr(source, '_destroyed') and source._destroyed:
+                destroy(marker)
+                continue
 
             try:
                 # Получение позиции | Get position

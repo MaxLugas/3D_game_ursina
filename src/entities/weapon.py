@@ -111,6 +111,9 @@ class FPSWeapon:
         )
         if hit_info.hit:
             entity = hit_info.entity
+            if hasattr(entity, 'npc_ref'):
+                entity.npc_ref.die()
+                return
             model_name = entity.model.name if entity.model else None
             if model_name in DESTRUCTIBLE_OBJECTS:
                 destroy(entity)

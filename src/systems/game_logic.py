@@ -32,6 +32,9 @@ class GameLogic:
         if hasattr(self.player, 'double_jump_used') and self.player.grounded:
             self.player.double_jump_used = False
 
+        # Удаление уничтоженных NPC | Remove destroyed NPCs
+        self.npcs = [n for n in self.npcs if not getattr(n, '_destroyed', False)]
+
         # Обновление NPC | Update NPCs
         for npc in self.npcs:
             npc.update()
