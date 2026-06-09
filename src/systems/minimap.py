@@ -74,6 +74,8 @@ class Minimap:
             )
 
         for ent in self.world_entities:
+            if getattr(ent, 'is_ground_tile', False):
+                continue
             if not hasattr(ent, 'bounds'):
                 continue
             obj_type = self._get_object_type(ent)
@@ -102,9 +104,10 @@ class Minimap:
 
     def update(self):
         """Обновление позиций всех маркеров каждый кадр. | Update all marker positions each frame."""
-        # Позиция игрока | Player position
+        # Позиция и поворот игрока | Player position and rotation
         p_pos = self._world_to_minimap(self.player.position)
         self.player_marker.position = p_pos
+        self.player_marker.rotation = (0, 0, self.player.rotation_y)
 
         # Обновление остальных маркеров с очисткой удалённых объектов | Update other markers with cleanup
         valid_markers = []

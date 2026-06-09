@@ -22,7 +22,7 @@ PLAYER_MOUSE_SENSITIVITY = (40, 40)
 MINIMAP_SIZE = 0.3                                      # Размер мини-карты | Minimap size as fraction of screen height
 MINIMAP_PLAYER_MARKER_SCALE = 0.015                     # Масштаб маркера игрока | Player marker scale
 MINIMAP_NPC_MARKER_SCALE = 0.012                        # Масштаб маркера NPC | NPC marker scale
-MINIMAP_VISIBILITY = 0.85                               # Прозрачность фона мини-карты | Minimap background transparency
+MINIMAP_VISIBILITY = 0.65                               # Прозрачность фона мини-карты | Minimap background transparency
 
 # ================ Настройки Ursina | Ursina Settings ================
 WINDOW_TITLE = "Game"                                   # Заголовок игрового окна | Game window title

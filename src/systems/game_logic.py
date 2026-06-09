@@ -10,7 +10,7 @@ class GameLogic:
         self.world_entities = world_entities
         self.base_speed = player.speed
         self.map_half_size = MAP_HALF_SIZE
-        self.npc_update_distance = RENDER_DISTANCE * 1.5
+        self.npc_update_distance = RENDER_DISTANCE
 
 
     def update(self):

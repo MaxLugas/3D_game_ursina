@@ -5,7 +5,7 @@ from pathlib import Path
 # Добавляем корневую директорию в PYTHONPATH для абсолютных импортов | Add root dir to PYTHONPATH for absolute imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.core.engine import init_engine
+from src.core.engine import init_engine, create_ground_tiles
 from src.systems.map_loader import load_map, get_player_start
 from src.systems.game_logic import GameLogic
 from src.entities.player import create_player
@@ -41,8 +41,12 @@ def main():
     # Инициализация оружия от первого лица | Initialize first-person weapon
     weapon = FPSWeapon(model_path=WEAPON_MODEL, scale=WEAPON_SCALE)
 
+    # Создаём тайлы земли (рендерятся только в радиусе видимости) | Create ground tiles (render only within RENDER_DISTANCE)
+    ground_tiles = create_ground_tiles()
+
     # Загружаем карту один раз с созданным игроком | Load map once with created player
     world_entities, npcs_from_map, _ = load_map(MAP_FILENAME, player=player, load_npcs=True)
+    world_entities.extend(ground_tiles)
     _load_duration = time.time() - _start_load
     print(f"[load-time] Карта загружена за {_load_duration:.3f} сек")
 
