@@ -13,8 +13,7 @@ from ursina import *
 from src.systems.minimap import Minimap
 from src.entities.weapon import FPSWeapon
 from src.core.config import PLAYER_SPEED, PLAYER_SECOND_JUMP_HEIGHT, MAP_HALF_SIZE, PLAYER_GRAVITY, \
-    PLAYER_MOUSE_SENSITIVITY, MAP_FILENAME
-from src.core.weapon_config import WEAPON_MODEL, WEAPON_SCALE
+    PLAYER_MOUSE_SENSITIVITY, MAP_FILENAME, WEAPON_MODEL, WEAPON_SCALE
 
 game_logic = None
 player = None

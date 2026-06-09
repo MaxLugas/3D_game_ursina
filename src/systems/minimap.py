@@ -53,10 +53,9 @@ class Minimap:
             marker.enabled = visible
 
     def _get_object_type(self, ent):
-        model_str = str(ent.model).lower()
-        for obj_type in ('tree', 'stone', 'cottage', 'statue', 'flashlight', 'target', 'fence'):
-            if obj_type in model_str:
-                return obj_type
+        obj_type = getattr(ent, 'obj_type', None)
+        if obj_type in ('tree', 'stone', 'cottage', 'statue', 'flashlight', 'target', 'fence'):
+            return obj_type
         return None
 
     def _make_marker_for_entity(self, ent):

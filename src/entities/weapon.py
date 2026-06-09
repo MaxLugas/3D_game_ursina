@@ -1,7 +1,8 @@
 from ursina import *
 from direct.actor.Actor import Actor
 from src.core.destructibles import DESTRUCTIBLE_OBJECTS
-from src.core.weapon_config import WEAPON_MODEL, WEAPON_SCALE
+from panda3d.core import MaterialAttrib, ColorScaleAttrib
+from src.core.config import WEAPON_MODEL, WEAPON_SCALE
 from src.shaders.shader_loader import weapon_shader_panda
 
 class FPSWeapon:
@@ -20,7 +21,7 @@ class FPSWeapon:
 
         self.actor.set_shader(weapon_shader_panda)
         self.holder.set_light_off()
-        from panda3d.core import MaterialAttrib, ColorScaleAttrib
+
         def _set_geom_colors(node):
             if node.node().is_geom_node():
                 gn = node.node()

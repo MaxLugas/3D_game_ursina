@@ -181,9 +181,25 @@ class AnimatedNPC:
 
         return False
 
-    def _stop_walk_sound(self):
-        """Остановка звука шагов | Stop walking sound"""
-        pass
+    def _rotate_2d(self, vec, angle_deg):
+        rad = math.radians(angle_deg)
+        return Vec3(
+            vec.x * math.cos(rad) - vec.z * math.sin(rad),
+            0,
+            vec.x * math.sin(rad) + vec.z * math.cos(rad)
+        ).normalized()
+
+    @staticmethod
+    def _dir_from_angle(angle_deg):
+        rad = math.radians(angle_deg)
+        return Vec3(math.sin(rad), 0, math.cos(rad)).normalized()
+
+    def _safe_play(self, anim_name, loop=True):
+        if anim_name in self.actor.get_anim_names():
+            if loop:
+                self.actor.loop(anim_name)
+            else:
+                self.actor.play(anim_name)
 
     def _create_collider(self):
         """Создание коллайдера для NPC | Create collider for NPC"""
@@ -272,13 +288,7 @@ class AnimatedNPC:
         # Двигаться в сторону цели с небольшим отклонением | Move towards the target with a slight deviation
         base_dir = (target_pos - current).normalized()
         for angle in [0, 30, -30, 45, -45, 60, -60, 90, -90]:
-            rad = math.radians(angle)
-            test_dir = Vec3(
-                base_dir.x * math.cos(rad) - base_dir.z * math.sin(rad),
-                0,
-                base_dir.x * math.sin(rad) + base_dir.z * math.cos(rad)
-            ).normalized()
-            strategies.append(test_dir)
+            strategies.append(self._rotate_2d(base_dir, angle))
 
         # Стратегия 2 | Strategy 2
         # Двигаться в сторону от последнего препятствия | Move away from the last obstacle
@@ -288,10 +298,7 @@ class AnimatedNPC:
 
         # Стратегия 3 | Strategy 3
         # Случайное направление (чтобы выйти из тупика) | Random direction (to break the deadlock)
-        random_angle = random.uniform(0, 360)
-        rad = math.radians(random_angle)
-        random_dir = Vec3(math.sin(rad), 0, math.cos(rad)).normalized()
-        strategies.append(random_dir)
+        strategies.append(self._dir_from_angle(random.uniform(0, 360)))
 
         # Пробуем каждую стратегию | Try every strategy
         tested_positions = []
@@ -427,8 +434,7 @@ class AnimatedNPC:
 
         # Проверяем 16 направлений | Check 16 directions
         for angle in range(0, 360, 22):
-            rad = math.radians(angle)
-            test_dir = Vec3(math.sin(rad), 0, math.cos(rad)).normalized()
+            test_dir = self._dir_from_angle(angle)
 
             test_pos = current + test_dir * speed * time.dt * 2
 
@@ -480,12 +486,7 @@ class AnimatedNPC:
 
         openness = 0
         for test_angle in [0, 90, -90, 180]:
-            rad = math.radians(test_angle)
-            check_dir = Vec3(
-                direction.x * math.cos(rad) - direction.z * math.sin(rad),
-                0,
-                direction.x * math.sin(rad) + direction.z * math.cos(rad)
-            ).normalized()
+            check_dir = self._rotate_2d(direction, test_angle)
             check_pos = new_pos + check_dir * 2
             if not self._check_collision(check_pos):
                 openness += 1
@@ -501,17 +502,8 @@ class AnimatedNPC:
         current = self.npc_node.get_pos()
 
         # Вычисляем перпендикулярные направления | Calculate the perpendicular directions
-        left_dir = Vec3(
-            desired_direction.x * math.cos(math.radians(90)) - desired_direction.z * math.sin(math.radians(90)),
-            0,
-            desired_direction.x * math.sin(math.radians(90)) + desired_direction.z * math.cos(math.radians(90))
-        ).normalized()
-
-        right_dir = Vec3(
-            desired_direction.x * math.cos(math.radians(-90)) - desired_direction.z * math.sin(math.radians(-90)),
-            0,
-            desired_direction.x * math.sin(math.radians(-90)) + desired_direction.z * math.cos(math.radians(-90))
-        ).normalized()
+        left_dir = self._rotate_2d(desired_direction, 90)
+        right_dir = self._rotate_2d(desired_direction, -90)
 
         # Выбираем направление, которое лучше ведет к цели | Choosing the direction the best direction
         left_score = self._evaluate_direction(left_dir, current + left_dir, current, target_pos, desired_direction)
@@ -579,25 +571,21 @@ class AnimatedNPC:
 
         if self.skill_used and distance_to_player < RUN_TRIGGER_DISTANCE and self.state == self.idle_anim:
             self.state = self.run_anim_2
-            if self.run_anim_2 in self.actor.get_anim_names():
-                self.actor.loop(self.run_anim_2)
+            self._safe_play(self.run_anim_2)
 
         # Логика состояний | State machine
         if self.state == self.idle_anim:
             if distance_to_player < DROID_IDLE_DISTANCE:
                 self.state = self.walk_anim
-                if self.walk_anim in self.actor.get_anim_names():
-                    self.actor.loop(self.walk_anim)
+                self._safe_play(self.walk_anim)
 
         elif self.state == self.walk_anim:
             if distance_to_player < DROID_ATTACK_DISTANCE:
                 self.state = self.skill_anim
-                if self.skill_anim in self.actor.get_anim_names():
-                    self.actor.play(self.skill_anim)
+                self._safe_play(self.skill_anim, loop=False)
             elif distance_to_player >= DROID_IDLE_DISTANCE:
                 self.state = self.idle_anim
-                if self.idle_anim in self.actor.get_anim_names():
-                    self.actor.loop(self.idle_anim)
+                self._safe_play(self.idle_anim)
             else:
                 # Идти к игроку| Walk toward player
                 self._move_toward(player_pos, self.speed_walk)
@@ -609,18 +597,15 @@ class AnimatedNPC:
             if current_anim != self.skill_anim:
                 self.skill_used = True
                 self.state = self.run_anim_1
-                if self.run_anim_1 in self.actor.get_anim_names():
-                    self.actor.loop(self.run_anim_1)
+                self._safe_play(self.run_anim_1)
 
         elif self.state == self.run_anim_1:
             if distance_to_player < DROID_ATTACK_TRIGGER_DISTANCE:
                 self.state = self.attack_anim_1
-                if self.attack_anim_1 in self.actor.get_anim_names():
-                    self.actor.play(self.attack_anim_1)
+                self._safe_play(self.attack_anim_1, loop=False)
             elif distance_to_player >= DROID_IDLE_DISTANCE:
                 self.state = self.idle_anim
-                if self.idle_anim in self.actor.get_anim_names():
-                    self.actor.loop(self.idle_anim)
+                self._safe_play(self.idle_anim)
             else:
                 # Бежать к игроку со скоростью run_1 | Run to player with run_1
                 self._move_toward(player_pos, self.speed_run_1)
@@ -636,12 +621,10 @@ class AnimatedNPC:
         elif self.state == self.run_anim_2:
             if distance_to_player < DROID_ATTACK_TRIGGER_DISTANCE:
                 self.state = self.attack_anim_1
-                if self.attack_anim_1 in self.actor.get_anim_names():
-                    self.actor.play(self.attack_anim_1)
+                self._safe_play(self.attack_anim_1, loop=False)
             elif distance_to_player >= DROID_IDLE_DISTANCE:
                 self.state = self.idle_anim
-                if self.idle_anim in self.actor.get_anim_names():
-                    self.actor.loop(self.idle_anim)
+                self._safe_play(self.idle_anim)
             else:
                 # Бежать к игроку с увеличенной скоростью run_2 | Run to player with run_2
                 self._move_toward(player_pos, self.speed_run_2)
@@ -665,16 +648,13 @@ class AnimatedNPC:
                 if distance_to_player < DROID_IDLE_DISTANCE:
                     if self.skill_used:
                         self.state = self.run_anim_2
-                        if self.run_anim_2 in self.actor.get_anim_names():
-                            self.actor.loop(self.run_anim_2)
+                        self._safe_play(self.run_anim_2)
                     else:
                         self.state = self.run_anim_1
-                        if self.run_anim_1 in self.actor.get_anim_names():
-                            self.actor.loop(self.run_anim_1)
+                        self._safe_play(self.run_anim_1)
                 else:
                     self.state = self.idle_anim
-                    if self.idle_anim in self.actor.get_anim_names():
-                        self.actor.loop(self.idle_anim)
+                    self._safe_play(self.idle_anim)
 
         # Синхронизация коллайдера с позицией NPC | Sync collider with NPC position
         if hasattr(self, 'collider_entity') and self.collider_entity:
@@ -701,29 +681,3 @@ class AnimatedNPC:
         """
         return self.npc_node.get_pos()
 
-    def get_state(self):
-        """
-        Возвращает текущее состояние NPC
-        Returns current NPC state
-        """
-        return self.state
-
-    def set_state(self, new_state):
-        """
-        Устанавливает состояние NPC
-        Sets NPC state
-        """
-        valid_states = [self.idle_anim, self.walk_anim, self.skill_anim, self.run_anim_1, self.run_anim_2,
-                        self.attack_anim_1]
-        if new_state in valid_states:
-            self.state = new_state
-        else:
-            print(f"⚠️ Неверное состояние: {new_state} | Invalid state: {new_state}")
-
-    def reset_skill_flag(self):
-        """
-        Сброс флага использования скилла (если нужно)
-        Reset skill usage flag (if needed)
-        """
-        self.skill_used = False
-        self.skill_sound_played = False

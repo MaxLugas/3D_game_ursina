@@ -45,6 +45,7 @@ def create_world_object(obj_type, x, y, z, rot, y_offset=0, verbose=True):
         shader=comics_shaders,
         enabled=config.get("enabled", False)
     )
+    entity.obj_type = obj_type
 
     if config.get("shrink_factor") is not None:
         invoke(_setup_with_offset, entity, config["shrink_factor"], y_offset, delay=0)

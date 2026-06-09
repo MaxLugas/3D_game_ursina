@@ -1,5 +1,5 @@
 from ursina import *
-from src.core.config import MAP_HALF_SIZE, RENDER_DISTANCE
+from src.core.config import MAP_HALF_SIZE, RENDER_DISTANCE, PLAYER_SPEED
 from src.entities.npc import AnimatedNPC
 
 
@@ -8,7 +8,6 @@ class GameLogic:
         self.player = player
         self.npcs = npcs
         self.world_entities = world_entities
-        self.base_speed = player.speed
         self.map_half_size = MAP_HALF_SIZE
         self.npc_update_distance = RENDER_DISTANCE
 
@@ -26,9 +25,9 @@ class GameLogic:
 
         # Ускорение при зажатом Shift (бег) | Sprint when Shift is held
         if held_keys['shift']:
-            self.player.speed = self.base_speed * 2
+            self.player.speed = PLAYER_SPEED * 2
         else:
-            self.player.speed = self.base_speed
+            self.player.speed = PLAYER_SPEED
 
         # Сброс флага двойного прыжка при касании земли | Reset double jump flag when grounded
         if hasattr(self.player, 'double_jump_used') and self.player.grounded:
@@ -47,9 +46,9 @@ class GameLogic:
 
     def _update_visibility(self):
         player_pos = self.player.position
-        for entity in self.world_entities[:]:
+        alive = []
+        for entity in self.world_entities:
             if getattr(entity, '_destroyed', False):
-                self.world_entities.remove(entity)
                 continue
             try:
                 if isinstance(entity, AnimatedNPC):
@@ -58,5 +57,7 @@ class GameLogic:
                 else:
                     dist = distance(player_pos, entity.position)
                     entity.visible = dist <= RENDER_DISTANCE
+                alive.append(entity)
             except AssertionError:
-                self.world_entities.remove(entity)
+                pass
+        self.world_entities[:] = alive
