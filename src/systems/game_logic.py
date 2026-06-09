@@ -1,5 +1,6 @@
 from ursina import *
-from src.core.config import MAP_HALF_SIZE
+from src.core.config import MAP_HALF_SIZE, RENDER_DISTANCE
+from src.entities.npc import AnimatedNPC
 
 
 class GameLogic:
@@ -9,6 +10,7 @@ class GameLogic:
         self.world_entities = world_entities
         self.base_speed = player.speed
         self.map_half_size = MAP_HALF_SIZE
+        self.npc_update_distance = RENDER_DISTANCE * 1.5
 
 
     def update(self):
@@ -35,11 +37,26 @@ class GameLogic:
         # Удаление уничтоженных NPC | Remove destroyed NPCs
         self.npcs = [n for n in self.npcs if not getattr(n, '_destroyed', False)]
 
-        # Обновление NPC | Update NPCs
-        for npc in self.npcs:
-            npc.update()
+        # Обновление видимости объектов | Update object visibility
+        self._update_visibility()
 
-        # # Взаимодействие с NPC | NPC interaction
-        # for npc in self.npcs:
-        #     if distance(self.player.position, npc.get_position()) < 1.5:
-        #         npc.trigger_interaction()
+        # Обновление NPC (только в радиусе обновления) | Update NPCs (only within update radius)
+        for npc in self.npcs:
+            if distance(self.player.position, npc.get_position()) < self.npc_update_distance:
+                npc.update()
+
+    def _update_visibility(self):
+        player_pos = self.player.position
+        for entity in self.world_entities[:]:
+            if getattr(entity, '_destroyed', False):
+                self.world_entities.remove(entity)
+                continue
+            try:
+                if isinstance(entity, AnimatedNPC):
+                    dist = distance(player_pos, entity.get_position())
+                    entity.set_visible(dist <= RENDER_DISTANCE)
+                else:
+                    dist = distance(player_pos, entity.position)
+                    entity.visible = dist <= RENDER_DISTANCE
+            except AssertionError:
+                self.world_entities.remove(entity)

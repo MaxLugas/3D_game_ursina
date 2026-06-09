@@ -686,6 +686,14 @@ class AnimatedNPC:
         self.actor.cleanup()
         self.npc_node.detach_node()
 
+    def set_visible(self, visible):
+        if visible:
+            self.npc_node.show()
+            self.collider_entity.visible = True
+        else:
+            self.npc_node.hide()
+            self.collider_entity.visible = False
+
     def get_position(self):
         """
         Возвращает текущую позицию NPC

@@ -37,3 +37,5 @@ DIRECTIONAL_LIGHT_DIRECTION = Vec3(1, -1, -1)           # Направление
 AMBIENT_LIGHT_COLOR = color.rgb(90, 70, 140)            # Цвет фонового освещения | Ambient light color
 DIRECTIONAL_LIGHT_COLOR = color.rgb(240, 230, 200)      # Цвет направленного света | Directional light color
 SPECULAR_FACTOR = 0.0                                   # Отключение спекулярных бликов | Disable specular highlights
+
+RENDER_DISTANCE = 35                                    # Дистанция рендеринга объектов | Object render distance
