@@ -25,7 +25,6 @@ def main():
     """Главная функция инициализации игры. | Main game initialization function."""
     global game_logic, player, minimap, weapon
     app = init_engine()
-    # Временная метка для измерения времени загрузки карты и появления мира
     _start_load = time.time()
 
     player_start = get_player_start()
@@ -44,7 +43,7 @@ def main():
     # Создаём тайлы земли (рендерятся только в радиусе видимости) | Create ground tiles (render only within RENDER_DISTANCE)
     ground_tiles = create_ground_tiles()
 
-    # Загружаем карту один раз с созданным игроком | Load map once with created player
+    # Загружаем карту — все объекты и NPC создаются сразу | Load map — all objects and NPCs created at once
     world_entities, npcs_from_map, _ = load_map(MAP_FILENAME, player=player, load_npcs=True)
     world_entities.extend(ground_tiles)
     _load_duration = time.time() - _start_load
