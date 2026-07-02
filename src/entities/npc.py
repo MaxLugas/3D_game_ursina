@@ -5,22 +5,26 @@ import math
 import random
 from collections import deque
 
-from src.core.config import (
-    NPC_SPEED_WALK, NPC_SPEED_RUN_1, NPC_ATTACK_DISTANCE, NPC_IDLE_DISTANCE, NPC_ATTACK_TRIGGER_DISTANCE,
-    MODELS_DIR, COLLIDER_SHRINK_FACTOR, NPC_MIN_CHASE_DISTANCE, NPC_WALK_ANIM, NPC_RUN_ANIM_1, NPC_SKILL_ANIM,
-    NPC_IDLE_ANIM, NPC_ATTACK_ANIM_1, NPC_RUN_ANIM_2, NPC_SPEED_RUN_2, NPC_SKILL_SOUND, NPC_SKILL_SOUND_PITCH,
-    NPC_WALK_SOUND, NPC_ATTACK_1_SOUND
+from src.core.config import MODELS_DIR
+
+from src.core.npc_config import (
+    DROID_SPEED_WALK, DROID_SPEED_RUN_1, DROID_ATTACK_DISTANCE, DROID_IDLE_DISTANCE, DROID_ATTACK_TRIGGER_DISTANCE,
+    DROID_MIN_CHASE_DISTANCE, DROID_WALK_ANIM, DROID_RUN_ANIM_1, DROID_SKILL_ANIM,
+    DROID_IDLE_ANIM, DROID_ATTACK_ANIM_1, DROID_RUN_ANIM_2, DROID_SPEED_RUN_2, DROID_SKILL_SOUND, DROID_SKILL_SOUND_PITCH,
+    DROID_WALK_SOUND, DROID_ATTACK_1_SOUND
 )
+
+from src.core.objects_config import COLLIDER_SHRINK_FACTOR
 from src.shaders.shader_loader import npc_shader_panda
 from src.utils.object_setup import setup_collidable_object
 
 
 class AnimatedNPC:
     def __init__(self, start_pos, player, model_path=f'{MODELS_DIR}/droid.glb',
-                 idle_anim=NPC_IDLE_ANIM, walk_anim=NPC_WALK_ANIM, run_anim_1=NPC_RUN_ANIM_1, run_anim_2=NPC_RUN_ANIM_2,
-                 skill_anim=NPC_SKILL_ANIM, attack_anim_1=NPC_ATTACK_ANIM_1, fix_orientation=True, scale=2.0,
-                 speed_walk=NPC_SPEED_WALK, speed_run_1=NPC_SPEED_RUN_1, speed_run_2=NPC_SPEED_RUN_2,
-                 shrink_factor=COLLIDER_SHRINK_FACTOR, skill_sound=NPC_SKILL_SOUND, walk_sound=NPC_WALK_SOUND, attack_sound_1=NPC_ATTACK_1_SOUND):
+                 idle_anim=DROID_IDLE_ANIM, walk_anim=DROID_WALK_ANIM, run_anim_1=DROID_RUN_ANIM_1, run_anim_2=DROID_RUN_ANIM_2,
+                 skill_anim=DROID_SKILL_ANIM, attack_anim_1=DROID_ATTACK_ANIM_1, fix_orientation=True, scale=2.0,
+                 speed_walk=DROID_SPEED_WALK, speed_run_1=DROID_SPEED_RUN_1, speed_run_2=DROID_SPEED_RUN_2,
+                 shrink_factor=COLLIDER_SHRINK_FACTOR, skill_sound=DROID_SKILL_SOUND, walk_sound=DROID_WALK_SOUND, attack_sound_1=DROID_ATTACK_1_SOUND):
 
         self.player = player
         self.speed_walk = speed_walk
@@ -123,6 +127,8 @@ class AnimatedNPC:
         # === СОЗДАНИЕ КОЛЛАЙДЕРА | CREATE COLLIDER ===
         self._create_collider()
 
+        self._destroyed = False
+
         print(f"✅ NPC создан в позиции {start_pos[0]:.2f} | NPC created at position {start_pos[0]:.2f}")
 
     def _load_sound(self, sound_path, sound_attr, sound_type="sound", volume=0.5):
@@ -175,26 +181,48 @@ class AnimatedNPC:
 
         return False
 
-    def _stop_walk_sound(self):
-        """Остановка звука шагов | Stop walking sound"""
-        pass
+    def _rotate_2d(self, vec, angle_deg):
+        rad = math.radians(angle_deg)
+        return Vec3(
+            vec.x * math.cos(rad) - vec.z * math.sin(rad),
+            0,
+            vec.x * math.sin(rad) + vec.z * math.cos(rad)
+        ).normalized()
+
+    @staticmethod
+    def _dir_from_angle(angle_deg):
+        rad = math.radians(angle_deg)
+        return Vec3(math.sin(rad), 0, math.cos(rad)).normalized()
+
+    def _safe_play(self, anim_name, loop=True):
+        if anim_name in self.actor.get_anim_names():
+            if loop:
+                self.actor.loop(anim_name)
+            else:
+                self.actor.play(anim_name)
 
     def _create_collider(self):
         """Создание коллайдера для NPC | Create collider for NPC"""
-        temp_ent = Entity(
-            model=self.model_path,
-            scale=self._scale,
-            position=self.npc_node.get_pos(),
-            enabled=False,
-            visible=False
+        # Сначала получаем размеры модели | First get model bounds
+        temp = Entity(model=self.model_path, scale=self._scale, visible=False)
+        size = Vec3(temp.bounds.size)
+        center = Vec3(temp.bounds.center)
+        destroy(temp)
+
+        # Создаём коллайдер без модели (чистый BoxCollider) | Collider without model (pure BoxCollider)
+        collider_size = Vec3(
+            size.x * self._shrink_factor,
+            size.y,
+            size.z * self._shrink_factor
         )
 
-        setup_collidable_object(temp_ent, shrink_factor=self._shrink_factor)
-
-        self.collider_entity = temp_ent
-        self.collider_entity.reparent_to(self.npc_node)
-        self.collider_entity.visible = False
-        self.collider_entity.texture = None
+        self.collider_entity = Entity(
+            position=self.npc_node.get_pos(),
+            visible=False,
+            enabled=True
+        )
+        self.collider_entity.collider = BoxCollider(self.collider_entity, center=center, size=collider_size)
+        self.collider_entity.npc_ref = self
 
     def _look_at_player(self, player_pos):
         """
@@ -260,13 +288,7 @@ class AnimatedNPC:
         # Двигаться в сторону цели с небольшим отклонением | Move towards the target with a slight deviation
         base_dir = (target_pos - current).normalized()
         for angle in [0, 30, -30, 45, -45, 60, -60, 90, -90]:
-            rad = math.radians(angle)
-            test_dir = Vec3(
-                base_dir.x * math.cos(rad) - base_dir.z * math.sin(rad),
-                0,
-                base_dir.x * math.sin(rad) + base_dir.z * math.cos(rad)
-            ).normalized()
-            strategies.append(test_dir)
+            strategies.append(self._rotate_2d(base_dir, angle))
 
         # Стратегия 2 | Strategy 2
         # Двигаться в сторону от последнего препятствия | Move away from the last obstacle
@@ -276,10 +298,7 @@ class AnimatedNPC:
 
         # Стратегия 3 | Strategy 3
         # Случайное направление (чтобы выйти из тупика) | Random direction (to break the deadlock)
-        random_angle = random.uniform(0, 360)
-        rad = math.radians(random_angle)
-        random_dir = Vec3(math.sin(rad), 0, math.cos(rad)).normalized()
-        strategies.append(random_dir)
+        strategies.append(self._dir_from_angle(random.uniform(0, 360)))
 
         # Пробуем каждую стратегию | Try every strategy
         tested_positions = []
@@ -330,7 +349,7 @@ class AnimatedNPC:
         current = self.npc_node.get_pos()
 
         distance_to_target = (target - current).length()
-        if distance_to_target <= NPC_MIN_CHASE_DISTANCE:
+        if distance_to_target <= DROID_MIN_CHASE_DISTANCE:
             return
 
         if self._is_stuck():
@@ -415,8 +434,7 @@ class AnimatedNPC:
 
         # Проверяем 16 направлений | Check 16 directions
         for angle in range(0, 360, 22):
-            rad = math.radians(angle)
-            test_dir = Vec3(math.sin(rad), 0, math.cos(rad)).normalized()
+            test_dir = self._dir_from_angle(angle)
 
             test_pos = current + test_dir * speed * time.dt * 2
 
@@ -468,12 +486,7 @@ class AnimatedNPC:
 
         openness = 0
         for test_angle in [0, 90, -90, 180]:
-            rad = math.radians(test_angle)
-            check_dir = Vec3(
-                direction.x * math.cos(rad) - direction.z * math.sin(rad),
-                0,
-                direction.x * math.sin(rad) + direction.z * math.cos(rad)
-            ).normalized()
+            check_dir = self._rotate_2d(direction, test_angle)
             check_pos = new_pos + check_dir * 2
             if not self._check_collision(check_pos):
                 openness += 1
@@ -489,17 +502,8 @@ class AnimatedNPC:
         current = self.npc_node.get_pos()
 
         # Вычисляем перпендикулярные направления | Calculate the perpendicular directions
-        left_dir = Vec3(
-            desired_direction.x * math.cos(math.radians(90)) - desired_direction.z * math.sin(math.radians(90)),
-            0,
-            desired_direction.x * math.sin(math.radians(90)) + desired_direction.z * math.cos(math.radians(90))
-        ).normalized()
-
-        right_dir = Vec3(
-            desired_direction.x * math.cos(math.radians(-90)) - desired_direction.z * math.sin(math.radians(-90)),
-            0,
-            desired_direction.x * math.sin(math.radians(-90)) + desired_direction.z * math.cos(math.radians(-90))
-        ).normalized()
+        left_dir = self._rotate_2d(desired_direction, 90)
+        right_dir = self._rotate_2d(desired_direction, -90)
 
         # Выбираем направление, которое лучше ведет к цели | Choosing the direction the best direction
         left_score = self._evaluate_direction(left_dir, current + left_dir, current, target_pos, desired_direction)
@@ -560,32 +564,28 @@ class AnimatedNPC:
         previous_state = self.state
 
         # Всегда поворачиваться к игроку, если он близко | Always face the player when close
-        if distance_to_player < NPC_IDLE_DISTANCE:
+        if distance_to_player < DROID_IDLE_DISTANCE:
             self._look_at_player(player_pos)
 
         RUN_TRIGGER_DISTANCE = 15
 
         if self.skill_used and distance_to_player < RUN_TRIGGER_DISTANCE and self.state == self.idle_anim:
             self.state = self.run_anim_2
-            if self.run_anim_2 in self.actor.get_anim_names():
-                self.actor.loop(self.run_anim_2)
+            self._safe_play(self.run_anim_2)
 
         # Логика состояний | State machine
         if self.state == self.idle_anim:
-            if distance_to_player < NPC_IDLE_DISTANCE:
+            if distance_to_player < DROID_IDLE_DISTANCE:
                 self.state = self.walk_anim
-                if self.walk_anim in self.actor.get_anim_names():
-                    self.actor.loop(self.walk_anim)
+                self._safe_play(self.walk_anim)
 
         elif self.state == self.walk_anim:
-            if distance_to_player < NPC_ATTACK_DISTANCE:
+            if distance_to_player < DROID_ATTACK_DISTANCE:
                 self.state = self.skill_anim
-                if self.skill_anim in self.actor.get_anim_names():
-                    self.actor.play(self.skill_anim)
-            elif distance_to_player >= NPC_IDLE_DISTANCE:
+                self._safe_play(self.skill_anim, loop=False)
+            elif distance_to_player >= DROID_IDLE_DISTANCE:
                 self.state = self.idle_anim
-                if self.idle_anim in self.actor.get_anim_names():
-                    self.actor.loop(self.idle_anim)
+                self._safe_play(self.idle_anim)
             else:
                 # Идти к игроку| Walk toward player
                 self._move_toward(player_pos, self.speed_walk)
@@ -593,22 +593,19 @@ class AnimatedNPC:
                 self._play_sound('walk_sound', 'walk', use_interval=True, interval=self.walk_sound_interval)
 
         elif self.state == self.skill_anim:
-            self._play_sound('skill_sound', 'skill', pitch=NPC_SKILL_SOUND_PITCH, played_flag='skill_sound_played')
+            self._play_sound('skill_sound', 'skill', pitch=DROID_SKILL_SOUND_PITCH, played_flag='skill_sound_played')
             if current_anim != self.skill_anim:
                 self.skill_used = True
                 self.state = self.run_anim_1
-                if self.run_anim_1 in self.actor.get_anim_names():
-                    self.actor.loop(self.run_anim_1)
+                self._safe_play(self.run_anim_1)
 
         elif self.state == self.run_anim_1:
-            if distance_to_player < NPC_ATTACK_TRIGGER_DISTANCE:
+            if distance_to_player < DROID_ATTACK_TRIGGER_DISTANCE:
                 self.state = self.attack_anim_1
-                if self.attack_anim_1 in self.actor.get_anim_names():
-                    self.actor.play(self.attack_anim_1)
-            elif distance_to_player >= NPC_IDLE_DISTANCE:
+                self._safe_play(self.attack_anim_1, loop=False)
+            elif distance_to_player >= DROID_IDLE_DISTANCE:
                 self.state = self.idle_anim
-                if self.idle_anim in self.actor.get_anim_names():
-                    self.actor.loop(self.idle_anim)
+                self._safe_play(self.idle_anim)
             else:
                 # Бежать к игроку со скоростью run_1 | Run to player with run_1
                 self._move_toward(player_pos, self.speed_run_1)
@@ -622,14 +619,12 @@ class AnimatedNPC:
 
         # === Вторая анимация бега с увеличенной скоростью | Second run animation ===
         elif self.state == self.run_anim_2:
-            if distance_to_player < NPC_ATTACK_TRIGGER_DISTANCE:
+            if distance_to_player < DROID_ATTACK_TRIGGER_DISTANCE:
                 self.state = self.attack_anim_1
-                if self.attack_anim_1 in self.actor.get_anim_names():
-                    self.actor.play(self.attack_anim_1)
-            elif distance_to_player >= NPC_IDLE_DISTANCE:
+                self._safe_play(self.attack_anim_1, loop=False)
+            elif distance_to_player >= DROID_IDLE_DISTANCE:
                 self.state = self.idle_anim
-                if self.idle_anim in self.actor.get_anim_names():
-                    self.actor.loop(self.idle_anim)
+                self._safe_play(self.idle_anim)
             else:
                 # Бежать к игроку с увеличенной скоростью run_2 | Run to player with run_2
                 self._move_toward(player_pos, self.speed_run_2)
@@ -650,19 +645,34 @@ class AnimatedNPC:
 
             if current_anim != self.attack_anim_1:
                 self.attack_sound_played = False
-                if distance_to_player < NPC_IDLE_DISTANCE:
+                if distance_to_player < DROID_IDLE_DISTANCE:
                     if self.skill_used:
                         self.state = self.run_anim_2
-                        if self.run_anim_2 in self.actor.get_anim_names():
-                            self.actor.loop(self.run_anim_2)
+                        self._safe_play(self.run_anim_2)
                     else:
                         self.state = self.run_anim_1
-                        if self.run_anim_1 in self.actor.get_anim_names():
-                            self.actor.loop(self.run_anim_1)
+                        self._safe_play(self.run_anim_1)
                 else:
                     self.state = self.idle_anim
-                    if self.idle_anim in self.actor.get_anim_names():
-                        self.actor.loop(self.idle_anim)
+                    self._safe_play(self.idle_anim)
+
+        # Синхронизация коллайдера с позицией NPC | Sync collider with NPC position
+        if hasattr(self, 'collider_entity') and self.collider_entity:
+            self.collider_entity.position = self.npc_node.get_pos()
+
+    def die(self):
+        self._destroyed = True
+        destroy(self.collider_entity)
+        self.actor.cleanup()
+        self.npc_node.detach_node()
+
+    def set_visible(self, visible):
+        if visible:
+            self.npc_node.show()
+            self.collider_entity.visible = True
+        else:
+            self.npc_node.hide()
+            self.collider_entity.visible = False
 
     def get_position(self):
         """
@@ -671,45 +681,3 @@ class AnimatedNPC:
         """
         return self.npc_node.get_pos()
 
-    def get_state(self):
-        """
-        Возвращает текущее состояние NPC
-        Returns current NPC state
-        """
-        return self.state
-
-    def set_state(self, new_state):
-        """
-        Устанавливает состояние NPC
-        Sets NPC state
-        """
-        valid_states = [self.idle_anim, self.walk_anim, self.skill_anim, self.run_anim_1, self.run_anim_2,
-                        self.attack_anim_1]
-        if new_state in valid_states:
-            self.state = new_state
-        else:
-            print(f"⚠️ Неверное состояние: {new_state} | Invalid state: {new_state}")
-
-    def trigger_interaction(self):
-        """Вызывается при взаимодействии игрока с NPC. | Called when player interacts with NPC."""
-        if hasattr(self, 'talked') and self.talked:
-            return
-        self.talked = True
-        msg = Text(
-            text='Run!',
-            origin=(0, 0),
-            y=0.1,
-            scale=1.2,
-            color=color.red,
-            background=True
-        )
-        msg.animate('color', color.rgba(255, 0, 0, 0), duration=2.0, curve=curve.out_expo)
-        invoke(destroy, msg, delay=0.8)
-
-    def reset_skill_flag(self):
-        """
-        Сброс флага использования скилла (если нужно)
-        Reset skill usage flag (if needed)
-        """
-        self.skill_used = False
-        self.skill_sound_played = False
