@@ -1,5 +1,6 @@
 from ursina import *
-from src.core.config import MAP_HALF_SIZE
+from src.core.config import MAP_HALF_SIZE, RENDER_DISTANCE, PLAYER_SPEED
+from src.entities.npc import AnimatedNPC
 
 
 class GameLogic:
@@ -7,8 +8,8 @@ class GameLogic:
         self.player = player
         self.npcs = npcs
         self.world_entities = world_entities
-        self.base_speed = player.speed
         self.map_half_size = MAP_HALF_SIZE
+        self.npc_update_distance = RENDER_DISTANCE
 
 
     def update(self):
@@ -24,9 +25,9 @@ class GameLogic:
 
         # Ускорение при зажатом Shift (бег) | Sprint when Shift is held
         if held_keys['shift']:
-            self.player.speed = self.base_speed * 2
+            self.player.speed = PLAYER_SPEED * 2
         else:
-            self.player.speed = self.base_speed
+            self.player.speed = PLAYER_SPEED
 
         # Сброс флага двойного прыжка при касании земли | Reset double jump flag when grounded
         if hasattr(self.player, 'double_jump_used') and self.player.grounded:
@@ -35,11 +36,28 @@ class GameLogic:
         # Удаление уничтоженных NPC | Remove destroyed NPCs
         self.npcs = [n for n in self.npcs if not getattr(n, '_destroyed', False)]
 
-        # Обновление NPC | Update NPCs
-        for npc in self.npcs:
-            npc.update()
+        # Обновление видимости объектов | Update object visibility
+        self._update_visibility()
 
-        # # Взаимодействие с NPC | NPC interaction
-        # for npc in self.npcs:
-        #     if distance(self.player.position, npc.get_position()) < 1.5:
-        #         npc.trigger_interaction()
+        # Обновление NPC (только в радиусе обновления) | Update NPCs (only within update radius)
+        for npc in self.npcs:
+            if distance(self.player.position, npc.get_position()) < self.npc_update_distance:
+                npc.update()
+
+    def _update_visibility(self):
+        player_pos = self.player.position
+        alive = []
+        for entity in self.world_entities:
+            if getattr(entity, '_destroyed', False):
+                continue
+            try:
+                if isinstance(entity, AnimatedNPC):
+                    dist = distance(player_pos, entity.get_position())
+                    entity.set_visible(dist <= RENDER_DISTANCE)
+                else:
+                    dist = distance(player_pos, entity.position)
+                    entity.visible = dist <= RENDER_DISTANCE
+                alive.append(entity)
+            except AssertionError:
+                pass
+        self.world_entities[:] = alive

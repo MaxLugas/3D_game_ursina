@@ -5,8 +5,7 @@ TREE_COLLIDER_SHRINK = 0.5                              # Уменьшение �
 COTTAGE_COLLIDER_SHRINK = 0.2                           # Уменьшение коллайдера для домиков | Collider shrink for cottages
 FLASHLIGHT_COLLIDER_SHRINK = 0.2                        # Уменьшение коллайдера для фонариков | Collider shrink for flashlights
 TARGET_COLLIDER_SHRINK = 1                              # Уменьшение коллайдера для мишеней | Collider shrink for targets
-STATUE_COLLIDER_SHRINK = 1                              # Коллайдер статуи = размер модели | Statue collider matches model size
-FENCE_COLLIDER_SHRINK=1
+FENCE_COLLIDER_SHRINK = 1
 
 
 # ================ Размер | Scale ================

@@ -5,7 +5,7 @@ from pathlib import Path
 # Добавляем корневую директорию в PYTHONPATH для абсолютных импортов | Add root dir to PYTHONPATH for absolute imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.core.engine import init_engine
+from src.core.engine import init_engine, create_ground_tiles
 from src.systems.map_loader import load_map, get_player_start
 from src.systems.game_logic import GameLogic
 from src.entities.player import create_player
@@ -13,8 +13,7 @@ from ursina import *
 from src.systems.minimap import Minimap
 from src.entities.weapon import FPSWeapon
 from src.core.config import PLAYER_SPEED, PLAYER_SECOND_JUMP_HEIGHT, MAP_HALF_SIZE, PLAYER_GRAVITY, \
-    PLAYER_MOUSE_SENSITIVITY, MAP_FILENAME
-from src.core.weapon_config import WEAPON_MODEL, WEAPON_SCALE
+    PLAYER_MOUSE_SENSITIVITY, MAP_FILENAME, WEAPON_MODEL, WEAPON_SCALE
 
 game_logic = None
 player = None
@@ -25,7 +24,6 @@ def main():
     """Главная функция инициализации игры. | Main game initialization function."""
     global game_logic, player, minimap, weapon
     app = init_engine()
-    # Временная метка для измерения времени загрузки карты и появления мира
     _start_load = time.time()
 
     player_start = get_player_start()
@@ -41,8 +39,12 @@ def main():
     # Инициализация оружия от первого лица | Initialize first-person weapon
     weapon = FPSWeapon(model_path=WEAPON_MODEL, scale=WEAPON_SCALE)
 
-    # Загружаем карту один раз с созданным игроком | Load map once with created player
+    # Создаём тайлы земли (рендерятся только в радиусе видимости) | Create ground tiles (render only within RENDER_DISTANCE)
+    ground_tiles = create_ground_tiles()
+
+    # Загружаем карту — все объекты и NPC создаются сразу | Load map — all objects and NPCs created at once
     world_entities, npcs_from_map, _ = load_map(MAP_FILENAME, player=player, load_npcs=True)
+    world_entities.extend(ground_tiles)
     _load_duration = time.time() - _start_load
     print(f"[load-time] Карта загружена за {_load_duration:.3f} сек")
 
